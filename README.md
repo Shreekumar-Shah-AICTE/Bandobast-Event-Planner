@@ -120,9 +120,10 @@ flowchart LR
 - **Privacy:** phone numbers and e-mails are removed in the browser before text goes to the AI. Ideas requests carry
   no names. Logs hold only the task, status, model and timing. Plans stay in your browser.
 - **Output is data, never markup:** React escapes all text, there is no `dangerouslySetInnerHTML`, and links are
-  built only from Google's URL formats. Headers in [`vercel.json`](vercel.json): strict CSP, HSTS, `nosniff`,
-  `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, COOP/CORP, a locked-down Permissions-Policy. API answers
-  are `no-store`.
+  built only from Google's URL formats. Headers in [`vercel.json`](vercel.json): strict CSP with no
+  `unsafe-inline` or `unsafe-eval` (zod runs without its eval fast path), HSTS, `nosniff`, `X-Frame-Options: DENY`,
+  `Referrer-Policy: no-referrer`, COOP/CORP, a locked-down Permissions-Policy. API answers are `no-store`.
+  `vite preview` serves the same headers, so the browser tests run under the production CSP.
 - **Supply chain:** exact versions with a lockfile, `npm audit` in CI, Actions pinned to commit SHAs, Dependabot.
   The threat model is in [SECURITY.md](SECURITY.md).
 
@@ -161,10 +162,10 @@ flowchart LR
 | Planning engine | Unit tests plus fast-check property tests. Examples: the budget split always adds up exactly; a delay never moves a task's predecessors.                            | `src/domain/*.test.ts` |
 | AI function     | Every status path with a fake model, limiter and cache: 403, 405, 413, 415, 429, fail-closed 503, timeouts, invalid model JSON, cache poisoning, never logging text | `server/*.test.ts`     |
 | Browser         | AI client and readers (AI first, then rules), the reducer and saving, and each tab with Testing Library, including focus and announcements                          | `src/**/*.test.ts(x)`  |
-| Journeys        | The Change Test, the Gemini path, quotes, a new plan, the keyboard and axe, on desktop and mobile                                                                   | `e2e/plan.spec.ts`     |
+| Journeys        | The Change Test, the Gemini path, quotes, a new plan, the keyboard, axe, and no CSP violations under the production headers, on desktop and mobile                  | `e2e/plan.spec.ts`     |
 
 Coverage thresholds are enforced in [`vite.config.ts`](vite.config.ts): 95% overall and 100% of lines for the planning
-engine. Today: 322 unit and component tests, 99.7% of lines, 98% of branches, plus 12 browser runs. CI runs
+engine. Today: 330 unit and component tests, 99.7% of lines, 98% of branches, plus 14 browser runs. CI runs
 everything on every push ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
 
 ## Claims you can check
@@ -182,6 +183,7 @@ everything on every push ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)
 | Hinglish change requests work without the AI                         | `src/domain/changeParser.test.ts`: "reads the same request in Hinglish"                           |
 | Phone numbers and e-mails never leave the device                     | `src/domain/grounding.test.ts`: "redacts phone numbers and e-mails before text leaves the device" |
 | Every screen passes axe-core WCAG 2.2 AA, on desktop and mobile      | `e2e/plan.spec.ts`: "every screen passes an automated WCAG 2.2 AA check"                          |
+| The app runs under the production CSP with no violations             | `e2e/plan.spec.ts`: "the app runs under the production security headers with no violations"       |
 | The numbers in these docs match the code                             | `server/docs.test.ts`                                                                             |
 
 ## Run locally

@@ -97,3 +97,25 @@ test('every screen passes an automated WCAG 2.2 AA check', async ({ page }) => {
     await expectNoAxeViolations(page);
   }
 });
+
+test('the app runs under the production security headers with no violations', async ({ page }) => {
+  const violations: string[] = [];
+  page.on('console', (message) => {
+    if (message.text().startsWith('CSP ')) violations.push(message.text());
+  });
+  await page.addInitScript(() => {
+    document.addEventListener('securitypolicyviolation', (event) => {
+      console.error(`CSP ${event.violatedDirective} ${event.blockedURI}`);
+    });
+  });
+  const response = await page.goto('/');
+  expect(response?.headers()['content-security-policy']).toContain("script-src 'self'");
+  await openSample(page);
+  await page.getByLabel('Tell the plan in your own words').fill('budget 10% kam');
+  await page.getByRole('button', { name: 'Check what this changes' }).click();
+  await page.getByRole('button', { name: 'Apply 1 change' }).click();
+  for (const name of ['Budget', /^Timeline/, 'Vendors', /^Quotes/, 'Ideas', /^History/]) {
+    await page.getByRole('tab', { name }).click();
+  }
+  expect(violations).toEqual([]);
+});
