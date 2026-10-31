@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { liveDeps } from '../../server/deps.js';
+import { liveDeps } from './deps.js';
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -7,10 +7,11 @@ afterEach(() => {
   vi.resetModules();
 });
 
+// Lives in server/, not api/: Vercel turns every file under api/ into a deployed function.
 describe('Vercel entry /api/ai/[task]', () => {
   it('exports a fetch handler that refuses GET', async () => {
     vi.spyOn(process.stdout, 'write').mockReturnValue(true);
-    const entry = await import('./[task].js');
+    const entry = await import('../api/ai/[task].js');
     const response = await entry.default.fetch(new Request('https://bandobast.test/api/ai/change'));
     expect(response.status).toBe(405);
   });
@@ -20,7 +21,7 @@ describe('Vercel entry /api/ai/[task]', () => {
       vi.stubEnv(name, '');
     }
     const write = vi.spyOn(process.stdout, 'write').mockReturnValue(true);
-    const entry = await import('./[task].js');
+    const entry = await import('../api/ai/[task].js');
     const response = await entry.default.fetch(
       new Request('https://bandobast.test/api/ai/intake', {
         method: 'POST',

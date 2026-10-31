@@ -48,7 +48,6 @@ export default defineConfig({
             'src/*.test.ts',
             'server/**/*.test.ts',
             'shared/**/*.test.ts',
-            'api/**/*.test.ts',
           ],
         },
       },
