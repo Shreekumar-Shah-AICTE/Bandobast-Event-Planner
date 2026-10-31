@@ -22,7 +22,7 @@ describe('Quotes: grounding checks', () => {
     expect(quotedFrom('   ', 'anything')).toBe(false);
   });
 
-  it('redacts phone numbers and e-mails before text leaves the device', () => {
+  it('redacts phone numbers and e-mails', () => {
     const redacted = redactContacts(
       'Call +91 98765 43210 or 9876543210, mail ravi.caterer@example.com',
     );

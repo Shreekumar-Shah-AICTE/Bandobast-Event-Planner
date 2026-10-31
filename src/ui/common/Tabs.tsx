@@ -51,7 +51,7 @@ function TabButton<T extends string>({
       role="tab"
       id={`tab-${tab.id}`}
       aria-selected={selected}
-      aria-controls={`panel-${tab.id}`}
+      aria-controls={selected ? `panel-${tab.id}` : undefined}
       tabIndex={selected ? 0 : -1}
       onClick={() => {
         onSelect(tab.id);

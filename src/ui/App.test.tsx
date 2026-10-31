@@ -88,6 +88,20 @@ describe('App', () => {
     expect(before).toBeDefined();
   });
 
+  it('applies only the changes left ticked', async () => {
+    const { user } = renderPlan();
+    await user.click(screen.getByRole('button', { name: SAMPLE_CHANGE }));
+    await user.click(screen.getByRole('button', { name: 'Check what this changes' }));
+    await screen.findByRole('heading', { name: 'Check these changes' });
+    const boxes = screen.getAllByRole('checkbox', { checked: true });
+    for (const box of boxes) await user.click(box);
+    expect(screen.getByRole('button', { name: 'Apply 0 changes' })).toBeDisabled();
+    for (const box of boxes.slice(1)) await user.click(box);
+    await user.click(screen.getByRole('button', { name: 'Apply 2 changes' }));
+    const report = screen.getByRole('region', { name: 'What changed' });
+    expect(within(report).queryByText('Guests: 200 → 250')).toBeNull();
+  });
+
   it('says when nothing could be read, and lets the user cancel', async () => {
     const { user } = renderPlan();
     await user.type(

@@ -37,6 +37,20 @@ describe('readChange', () => {
     expect(reading.value.changes).toHaveLength(1);
   });
 
+  it('removes phone numbers and e-mails before sending', async () => {
+    const fetchMock = mockAi(() => aiOk({ changes: [wire], unparsed: [] }));
+    await readChange(
+      '50 more guests, call 98765 43210 or a@b.in',
+      weddingProfile(),
+      TODAY,
+      signal(),
+    );
+    const sent = JSON.stringify(fetchMock.mock.calls[0]?.[1]?.body);
+    expect(sent).toContain('[phone]');
+    expect(sent).not.toContain('98765');
+    expect(sent).not.toContain('a@b.in');
+  });
+
   it('falls back to the rules, with a note, when the AI is down', async () => {
     const reading = await readChange('50 more guests', weddingProfile(), TODAY, signal());
     expect(reading).toMatchObject({ source: 'rules', note: FALLBACK_NOTES.unavailable });
@@ -44,6 +58,15 @@ describe('readChange', () => {
 });
 
 describe('readIntake', () => {
+  it('removes phone numbers and e-mails before sending', async () => {
+    const fetchMock = mockAi(() => aiDown());
+    await readIntake('wedding in Jaipur, 300 guests; call 98765 43210 or a@b.in', TODAY, signal());
+    const sent = JSON.stringify(fetchMock.mock.calls[0]?.[1]?.body);
+    expect(sent).toContain('[email]');
+    expect(sent).not.toContain('98765');
+    expect(sent).not.toContain('a@b.in');
+  });
+
   it('lets the AI fill what the rules missed, ignoring empty answers', async () => {
     mockAi(() =>
       aiOk({

@@ -22,16 +22,31 @@ export type AiResult<T extends AiTask> =
 const MAX_MODEL_NAME = 80;
 const HTTP = { tooMany: 429, badGateway: 502, unavailable: 503 } as const;
 
-/** One signal that aborts when any of the given signals does. O(n). */
-export function anySignal(signals: readonly AbortSignal[]): AbortSignal {
+/** A signal that aborts when any input does, and the way to detach it from them. */
+export interface LinkedSignal {
+  readonly signal: AbortSignal;
+  /** Removes the listeners from the inputs; runs by itself once the signal aborts. */
+  readonly release: () => void;
+}
+
+/** Links signals without leaving listeners on long-lived inputs. O(n). */
+export function anySignal(signals: readonly AbortSignal[]): LinkedSignal {
   const controller = new AbortController();
-  for (const signal of signals) {
-    if (signal.aborted) controller.abort();
-    signal.addEventListener('abort', () => {
+  const onAbort = (): void => {
+    controller.abort();
+  };
+  const release = (): void => {
+    for (const input of signals) input.removeEventListener('abort', onAbort);
+  };
+  controller.signal.addEventListener('abort', release, { once: true });
+  for (const input of signals) {
+    if (input.aborted) {
       controller.abort();
-    });
+      break;
+    }
+    input.addEventListener('abort', onAbort, { once: true });
   }
-  return controller.signal;
+  return { signal: controller.signal, release };
 }
 
 const reasonFor = (status: number): AiFailure => {
@@ -68,19 +83,24 @@ export async function askAi<T extends AiTask>(
   signal: AbortSignal,
 ): Promise<AiResult<T>> {
   const timeout = AbortSignal.timeout(AI_TIMING.clientTimeoutMs);
-  let response: Response;
+  const linked = anySignal([signal, timeout]);
   try {
-    response = await fetch(`/api/ai/${task}`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(input),
-      signal: anySignal([signal, timeout]),
-    });
-  } catch {
-    if (signal.aborted) return { ok: false, reason: 'aborted' };
-    return { ok: false, reason: timeout.aborted ? 'timeout' : 'offline' };
+    let response: Response;
+    try {
+      response = await fetch(`/api/ai/${task}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(input),
+        signal: linked.signal,
+      });
+    } catch {
+      if (signal.aborted) return { ok: false, reason: 'aborted' };
+      return { ok: false, reason: timeout.aborted ? 'timeout' : 'offline' };
+    }
+    return await readResponse(task, response);
+  } finally {
+    linked.release();
   }
-  return readResponse(task, response);
 }
 
 /** Plain-language note shown when the built-in rules answered instead. */

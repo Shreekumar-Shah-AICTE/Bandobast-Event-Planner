@@ -27,12 +27,24 @@ export interface QuoteAnalysis {
   readonly high: Paise;
   readonly unverified: readonly string[];
   readonly hiddenCharges: readonly string[];
+  /** Percentage charges on top ("Service charge 10% extra"), counted in the worst case. */
+  readonly surcharges: readonly Surcharge[];
   readonly clarifications: readonly string[];
+}
+
+export interface Surcharge {
+  readonly line: string;
+  readonly pct: number;
 }
 
 const HIDDEN_RE =
   /\b(extra|additional|not included|excluding|exclusive|overtime|per hour|corkage|service charge|transport|generator|diesel|plus taxes|taxes extra|advance|non[- ]refundable|cancellation|starting|onwards|approx)/iu;
 const VAGUE_RE = /\b(starting|onwards|approx|approximately|subject to)\b/iu;
+const SURCHARGE_RE = /\b(service charge|surcharge|handling|extra|additional|plus)\b/iu;
+/** Percentages that are tax, payment terms or discounts, not a charge on top. */
+const NOT_SURCHARGE_RE =
+  /\b(gst|cgst|sgst|igst|tax|taxes|advance|deposit|booking|balance|discount|off|cancel\w*|refund\w*)\b/iu;
+const PERCENT_RE = /(\d{1,2}(?:\.\d{1,2})?)\s*%/u;
 const MAX_FLAGS = 6;
 const MAX_SNIPPET = 120;
 
@@ -44,6 +56,19 @@ export function hiddenCharges(sourceText: string): readonly string[] {
     .filter((line) => line.length > 0 && HIDDEN_RE.test(line))
     .map((line) => (line.length > MAX_SNIPPET ? `${line.slice(0, MAX_SNIPPET)}…` : line));
   return [...new Set(lines)].slice(0, MAX_FLAGS);
+}
+
+/** Percentage charges written on top of the price, one per line. O(n). */
+export function percentSurcharges(sourceText: string): readonly Surcharge[] {
+  return sourceText
+    .split(/\r?\n/u)
+    .map((line) => line.trim())
+    .flatMap((line) => {
+      const pct = PERCENT_RE.exec(line)?.[1];
+      if (pct === undefined || !SURCHARGE_RE.test(line) || NOT_SURCHARGE_RE.test(line)) return [];
+      return [{ line: line.slice(0, MAX_SNIPPET), pct: Number(pct) }];
+    })
+    .slice(0, MAX_FLAGS);
 }
 
 function quantityFor(item: QuoteItem, chargedGuests: number): number {
@@ -60,7 +85,11 @@ function gstRange(subtotal: Paise, quote: Quote): readonly [Paise, Paise] {
   return [low, applyPercent(subtotal, GST_HIGH_PCT)];
 }
 
-function clarificationsFor(quote: Quote, unverified: readonly string[]): string[] {
+function clarificationsFor(
+  quote: Quote,
+  unverified: readonly string[],
+  surcharges: readonly Surcharge[],
+): string[] {
   const perGuest = quote.items.some((item) => item.unit === 'perGuest');
   return [
     ...(quote.items.length === 0 ? ['No priced items found — ask for an itemised quote.'] : []),
@@ -74,6 +103,10 @@ function clarificationsFor(quote: Quote, unverified: readonly string[]): string[
     ...unverified.map(
       (label) => `Confirm "${label}": that amount is not written in the quote text.`,
     ),
+    ...surcharges.map(
+      ({ line, pct }) =>
+        `Ask about "${line}": the worst case adds ${String(pct)}% on top, before GST.`,
+    ),
     ...(VAGUE_RE.test(quote.sourceText)
       ? ['Prices are marked approximate — ask for a fixed price.']
       : []),
@@ -82,7 +115,8 @@ function clarificationsFor(quote: Quote, unverified: readonly string[]): string[
 
 /**
  * Normalises a quote for `guests`: per-guest lines × max(guests, minimum guarantee),
- * other lines × quantity, unverified lines excluded, GST as a range. O(i + n).
+ * other lines × quantity, unverified lines excluded, GST as a range. The worst case
+ * also adds written percentage surcharges, with GST on top of them. O(i + n).
  */
 export function analyseQuote(quote: Quote, guests: number): QuoteAnalysis {
   const chargedGuests = Math.max(guests, quote.minGuarantee ?? 0);
@@ -93,7 +127,10 @@ export function analyseQuote(quote: Quote, guests: number): QuoteAnalysis {
   });
   const subtotal = sumPaise(items.filter((entry) => entry.verified).map((entry) => entry.total));
   const unverified = items.filter((entry) => !entry.verified).map((entry) => entry.item.label);
-  const [low, high] = gstRange(subtotal, quote);
+  const surcharges = percentSurcharges(quote.sourceText);
+  const surchargePct = surcharges.reduce((sum, entry) => sum + entry.pct, 0);
+  const [low] = gstRange(subtotal, quote);
+  const [, high] = gstRange(applyPercent(subtotal, surchargePct), quote);
   return {
     quote,
     items,
@@ -103,7 +140,8 @@ export function analyseQuote(quote: Quote, guests: number): QuoteAnalysis {
     high,
     unverified,
     hiddenCharges: hiddenCharges(quote.sourceText),
-    clarifications: clarificationsFor(quote, unverified),
+    surcharges,
+    clarifications: clarificationsFor(quote, unverified, surcharges),
   };
 }
 

@@ -3,7 +3,7 @@ import type { Quote } from '../../shared/schemas.js';
 import { CATERER_TEXT, quote } from '../test/fixtures.js';
 import { rupees } from './money.js';
 import { parseQuoteText } from './quoteParser.js';
-import { analyseQuote, compareQuotes, hiddenCharges } from './quotes.js';
+import { analyseQuote, compareQuotes, hiddenCharges, percentSurcharges } from './quotes.js';
 
 describe('Quotes: pasted caterer quote (₹850 a plate, 250-plate minimum, GST 5% extra)', () => {
   it('reads the WhatsApp text into a draft without the AI', () => {
@@ -25,6 +25,33 @@ describe('Quotes: pasted caterer quote (₹850 a plate, 250-plate minimum, GST 5
     expect(analysis.high).toBe(rupees(249_375));
     expect(analysis.unverified).toEqual([]);
     expect(analysis.clarifications).toEqual([]);
+  });
+
+  it('adds a written percentage surcharge to the worst case only, with GST on top', () => {
+    const sourceText = 'Veg thali Rs 780 per plate\nService charge 10% extra\nGST 18% extra';
+    const analysis = analyseQuote(
+      quote({
+        vendorName: 'Annapurna',
+        items: [{ label: 'Thali', unit: 'perGuest', amountRupees: 780 }],
+        minGuarantee: 300,
+        gst: 'extra',
+        gstRatePct: 18,
+        sourceText,
+      }),
+      200,
+    );
+    expect(analysis.subtotal).toBe(rupees(234_000));
+    expect(analysis.low).toBe(rupees(276_120));
+    expect(analysis.high).toBe(rupees(303_732));
+    expect(analysis.surcharges).toEqual([{ line: 'Service charge 10% extra', pct: 10 }]);
+    expect(analysis.clarifications).toContain(
+      'Ask about "Service charge 10% extra": the worst case adds 10% on top, before GST.',
+    );
+  });
+
+  it('does not count tax, payment terms or discounts as surcharges', () => {
+    const text = 'GST 18% extra\n50% advance to book\n10% discount on 500 plates\nPlus 5% handling';
+    expect(percentSurcharges(text)).toEqual([{ line: 'Plus 5% handling', pct: 5 }]);
   });
 
   it('flags transport and GST lines as possible extra charges', () => {

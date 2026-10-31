@@ -32,7 +32,8 @@ Upstash Redis
    with the words it came from, and you confirm them.
 3. The **What changed** report shows every budget line before and after, the reserve, the budget check
    (Fits → Short), tasks that became late, quote totals that changed, and up to three ways to rebalance, ranked by
-   your own priorities. **Use this option** saves the fix as a new version. **Undo this change** restores the old one.
+   your own priorities. **Use this option** applies the fix to that same new version, so the change and its fix stay
+   one step in History. **Undo this change** restores the old one.
 
 Every version is kept in **History** (the last 30), with what each one changed and a one-click restore.
 
@@ -61,9 +62,10 @@ side-by-side comparison by worst-case total. A price that is not written in your
 | `ideas`   | A profile summary (no names) → new ideas                              | No prices, contacts or business names. Categories must be known, "cheaper" must really be cheaper, and repeats are dropped.     | Curated library only                    |
 | `explain` | Rebalance options → a short comparison                                | The model may only write `{{placeholders}}`. Code fills in every number, and text with digits is rejected.                      | Template sentence                       |
 
-- **Models:** `gemini-3.8-flash`, then `gemini-3.5-flash-lite` if the first fails, through `@google/genai` with
-  JSON-schema structured output, low thinking and temperature 1 (the Gemini 3 default, which Google advises
-  keeping).
+- **Models:** `gemini-3.5-flash-lite` first, then `gemini-3.8-flash` only if the first times out, errors or fails a
+  check (a cheap-first cascade: on the live app the light model answered in about a second, and the larger one
+  often ran past the 9-second per-model timeout). Both run through `@google/genai` with JSON-schema structured
+  output, low thinking and temperature 1 (the Gemini 3 default, which Google advises keeping).
 - **Prompting:** user text is fenced and labelled as data, never as instructions. Each task has its own system
   instruction ([`server/prompts.ts`](server/prompts.ts)) and an output token cap
   ([`server/config.ts`](server/config.ts)).
@@ -118,7 +120,8 @@ flowchart LR
 - **Rate limits in a shared store, not in memory:** 12 requests per 60 s per client and 3,000 a day for the app, in
   Upstash Redis. If the store can't be reached, requests are refused. Clients are keyed by a salted SHA-256 hash of
   the platform-set IP, never the raw address.
-- **Privacy:** phone numbers and e-mails are removed in the browser before text goes to the AI. Ideas requests carry
+- **Privacy:** phone numbers and e-mails are removed in the browser from every text sent to the AI (event
+  description, change requests and quotes), and again on the server before a prompt is built. Ideas requests carry
   no names. Logs hold only the task, status, models tried and timing. Plans stay in your browser.
 - **Output is data, never markup:** React escapes all text, there is no `dangerouslySetInnerHTML`, and links are
   built only from Google's URL formats. Headers in [`vercel.json`](vercel.json): strict CSP with no
@@ -171,21 +174,21 @@ everything on every push ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)
 
 ## Claims you can check
 
-| Claim                                                                | Test                                                                                              |
-| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| The budget split adds up to your total to the rupee, for any input   | `src/domain/budget.test.ts`: "Σ planned + contingency === total" (property)                       |
-| A delay moves a task and its successors, never its predecessors      | `src/domain/timeline.test.ts`: "holds for any task and any delay (property)"                      |
-| A quote amount counts only if it is written in the quote             | `src/domain/grounding.test.ts`: "rejects amounts the text does not contain"                       |
-| A change from Gemini is dropped unless its evidence is in your words | `server/handler.test.ts`: "drops a change whose evidence is not in the request"                   |
-| Explanations never contain numbers written by the model              | `server/handler.test.ts`: "answers 502 when an explanation contains digits"                       |
-| AI requests are refused when the rate-limit store is down            | `server/handler.test.ts`: "fails closed with 503 when the rate-limit store is unavailable"        |
-| The server answers before the browser and Vercel give up             | `server/timing.test.ts`: "lets the layers give up in order"                                       |
-| Request text is never logged                                         | `server/handler.test.ts`: "never logs the request text"                                           |
-| Hinglish change requests work without the AI                         | `src/domain/changeParser.test.ts`: "reads the same request in Hinglish"                           |
-| Phone numbers and e-mails never leave the device                     | `src/domain/grounding.test.ts`: "redacts phone numbers and e-mails before text leaves the device" |
-| Every screen passes axe-core WCAG 2.2 AA, on desktop and mobile      | `e2e/plan.spec.ts`: "every screen passes an automated WCAG 2.2 AA check"                          |
-| The app runs under the production CSP with no violations             | `e2e/plan.spec.ts`: "the app runs under the production security headers with no violations"       |
-| The numbers in these docs match the code                             | `server/docs.test.ts`                                                                             |
+| Claim                                                                | Test                                                                                                                                                                           |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| The budget split adds up to your total to the rupee, for any input   | `src/domain/budget.test.ts`: "Σ planned + contingency === total" (property)                                                                                                    |
+| A delay moves a task and its successors, never its predecessors      | `src/domain/timeline.test.ts`: "holds for any task and any delay (property)"                                                                                                   |
+| A quote amount counts only if it is written in the quote             | `src/domain/grounding.test.ts`: "rejects amounts the text does not contain"                                                                                                    |
+| A change from Gemini is dropped unless its evidence is in your words | `server/handler.test.ts`: "drops a change whose evidence is not in the request"                                                                                                |
+| Explanations never contain numbers written by the model              | `server/handler.test.ts`: "answers 502 when an explanation contains digits"                                                                                                    |
+| AI requests are refused when the rate-limit store is down            | `server/handler.test.ts`: "fails closed with 503 when the rate-limit store is unavailable"                                                                                     |
+| The server answers before the browser and Vercel give up             | `server/timing.test.ts`: "lets the layers give up in order"                                                                                                                    |
+| Request text is never logged                                         | `server/handler.test.ts`: "never logs the request text"                                                                                                                        |
+| Hinglish change requests work without the AI                         | `src/domain/changeParser.test.ts`: "reads the same request in Hinglish"                                                                                                        |
+| Phone numbers and e-mails are removed before text reaches the AI     | `src/ai/readers.test.ts`: "removes phone numbers and e-mails before sending"; `server/tasks.test.ts`: "strips fence tags in any case and removes contacts again on the server" |
+| Every screen passes axe-core WCAG 2.2 AA, on desktop and mobile      | `e2e/plan.spec.ts`: "every screen passes an automated WCAG 2.2 AA check"                                                                                                       |
+| The app runs under the production CSP with no violations             | `e2e/plan.spec.ts`: "the app runs under the production security headers with no violations"                                                                                    |
+| The numbers in these docs match the code                             | `server/docs.test.ts`                                                                                                                                                          |
 
 ## Run locally
 
@@ -197,8 +200,15 @@ npm run verify       # format, lint, types, unit tests with coverage, build
 npm run e2e          # Playwright journeys (builds and serves the app)
 ```
 
-Settings are listed in [`.env.example`](.env.example). They are server-only: `GEMINI_API_KEY`, the Upstash
-credentials, and an optional model chain and salt. Without them, the function answers 503 and the app uses its rules.
+Settings are server-only (Vercel → Settings → Environment Variables; template in [`.env.example`](.env.example)).
+Without the first two, the function answers 503 and the app uses its rules.
+
+| Setting                                              | Needed     | What it does                                                        |
+| ---------------------------------------------------- | ---------- | ------------------------------------------------------------------- |
+| `GEMINI_API_KEY`                                     | For the AI | The Gemini API key                                                  |
+| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | For the AI | Shared rate limits and the answer cache (`KV_REST_API_*` also work) |
+| `GEMINI_MODELS`                                      | No         | Comma-separated model chain, tried in order (default as above)      |
+| `RATE_LIMIT_SALT`                                    | No         | Salt for the one-way hash of client IPs used as rate-limit keys     |
 
 ## Known limitations
 

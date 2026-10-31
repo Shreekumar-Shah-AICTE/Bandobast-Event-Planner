@@ -26,10 +26,21 @@ import { templateFor } from '../src/domain/templates/index.js';
 import { SERVER_CONFIG } from './config.js';
 import { changePrompt, explainPrompt, ideasPrompt, intakePrompt, quotePrompt } from './prompts.js';
 
+/**
+ * Words that are also ordinary words ("a", "an", "do", "teen", "char") count as
+ * numbers only right before a time unit: "a week", "do hafte".
+ */
+const UNIT_ONLY_WORDS: readonly string[] = ['a', 'an', 'do', 'teen', 'char'];
+const TIME_UNIT = String.raw`(?:days?|din|weeks?|hafte|hafta|months?|mahine|mahina)`;
+const STANDALONE_WORDS = Object.keys(NUMBER_WORDS).filter(
+  (word) => !UNIT_ONLY_WORDS.includes(word),
+);
 const NUMBER_WORD_RE = new RegExp(
-  String.raw`\b(?:${Object.keys(NUMBER_WORDS).join('|')})\b`,
+  String.raw`\b(?:${STANDALONE_WORDS.join('|')})\b|\b(?:${UNIT_ONLY_WORDS.join('|')})(?=\s+${TIME_UNIT}\b)`,
   'giu',
 );
+const NUMERAL_RE = /\d+(?:\.\d+)?/gu;
+const PERCENT_RE = /(\d+(?:\.\d+)?)\s*%/gu;
 
 /** Every whole number written in the text, in digits or as an English/Hinglish word. O(n). */
 function numbersIn(text: string): number[] {
@@ -40,9 +51,9 @@ function numbersIn(text: string): number[] {
   return [...digits, ...words];
 }
 
-/** True when the integer is written in the text as a number of its own ("250", "2,50"). */
+/** True when the number is written in the text as a number of its own ("250", "2,50", "12.5"). */
 const written = (value: number, text: string): boolean =>
-  new RegExp(String.raw`(^|[^\d])${String(value)}([^\d]|$)`, 'u').test(text.replaceAll(',', ''));
+  [...text.replaceAll(',', '').matchAll(NUMERAL_RE)].some((match) => Number(match[0]) === value);
 
 /** The value when the check passes, otherwise null. */
 const keep = <T>(value: T | null, check: (present: T) => boolean): T | null =>
@@ -100,7 +111,7 @@ export function guardChange(out: AiOutput<'change'>, input: AiInput<'change'>): 
 export function guardQuote(out: AiOutput<'quote'>, input: AiInput<'quote'>): AiOutput<'quote'> {
   const { text } = input;
   const rateWritten = (rate: number): boolean =>
-    new RegExp(String.raw`(^|[^\d])${String(rate)}\s*%`, 'u').test(text);
+    [...text.matchAll(PERCENT_RE)].some((match) => Number(match[1]) === rate);
   return {
     ...out,
     vendorName: keep(out.vendorName, (name) => quotedFrom(name, text)),

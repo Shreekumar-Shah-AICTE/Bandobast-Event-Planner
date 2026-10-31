@@ -24,6 +24,19 @@ describe('plan tabs', () => {
     expect(screen.getByRole('tab', { name: 'Overview' })).toHaveFocus();
   });
 
+  it('points only the selected tab at its panel, which is on the page', async () => {
+    const { user } = renderPlan();
+    const controlled = () =>
+      screen.getAllByRole('tab').filter((tab) => tab.hasAttribute('aria-controls'));
+    expect(controlled()).toEqual([screen.getByRole('tab', { name: 'Overview' })]);
+    await user.click(screen.getByRole('tab', { name: 'Budget' }));
+    const [budget] = controlled();
+    expect(budget).toHaveAccessibleName('Budget');
+    expect(document.getElementById(budget?.getAttribute('aria-controls') ?? '')).toBe(
+      screen.getByRole('tabpanel'),
+    );
+  });
+
   it('jumps from the overview to a tab and focuses it', async () => {
     const { user } = renderPlan();
     const overview = screen.getByRole('tabpanel');

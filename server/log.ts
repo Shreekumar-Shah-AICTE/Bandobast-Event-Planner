@@ -8,7 +8,7 @@ export interface RequestLog {
   readonly outcome: string;
   readonly ms: number;
   readonly model?: string;
-  /** Each model tried, as `model:outcome`, for example `gemini-3.8-flash:timeout,gemini-3.5-flash-lite:ok`. */
+  /** Each model tried, as `model:outcome`, for example `gemini-3.5-flash-lite:guard,gemini-3.8-flash:ok`. */
   readonly attempts?: string;
 }
 

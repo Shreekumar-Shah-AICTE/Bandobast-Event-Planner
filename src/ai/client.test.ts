@@ -60,12 +60,22 @@ describe('anySignal', () => {
     const a = new AbortController();
     const b = new AbortController();
     const both = anySignal([a.signal, b.signal]);
-    expect(both.aborted).toBe(false);
+    expect(both.signal.aborted).toBe(false);
     b.abort();
-    expect(both.aborted).toBe(true);
+    expect(both.signal.aborted).toBe(true);
   });
 
   it('is aborted at once when an input already is', () => {
-    expect(anySignal([AbortSignal.abort()]).aborted).toBe(true);
+    expect(anySignal([AbortSignal.abort()]).signal.aborted).toBe(true);
+  });
+
+  it('detaches from its inputs on release, so long-lived signals keep no listeners', () => {
+    const page = new AbortController();
+    const removed = vi.spyOn(page.signal, 'removeEventListener');
+    const linked = anySignal([page.signal]);
+    linked.release();
+    expect(removed).toHaveBeenCalledWith('abort', expect.any(Function));
+    page.abort();
+    expect(linked.signal.aborted).toBe(false);
   });
 });

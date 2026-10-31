@@ -22,7 +22,7 @@ const PHONE = String.raw`(?:\+?91[\s-]?)?(?:\d[\s-]?){9}\d\b`;
 const PHONE_RE = new RegExp(PHONE, 'gu');
 const EMAIL_RE = /[\w.+-]+@[\w-]+(?:\.[\w-]+)+/gu;
 
-/** Replaces phone numbers and e-mail addresses before text leaves the device. O(n). */
+/** Replaces phone numbers and e-mail addresses in text bound for the AI (browser and server). O(n). */
 export function redactContacts(text: string): string {
   return text.replace(EMAIL_RE, '[email]').replace(PHONE_RE, '[phone]');
 }

@@ -39,5 +39,11 @@ export const SERVER_CONFIG = {
   maxEventDaysAhead: 3 * 366,
   /** Hex characters kept from the salted client-IP hash. */
   clientKeyLength: 32,
-  defaultModels: ['gemini-3.8-flash', 'gemini-3.5-flash-lite'],
+  /**
+   * Fast model first, larger model second (a cheap-first cascade): the second one is
+   * tried only when the first times out, errors or fails a check. On the live app the
+   * light model answered every task in about a second; the larger one often needed
+   * more than the per-model timeout.
+   */
+  defaultModels: ['gemini-3.5-flash-lite', 'gemini-3.8-flash'],
 } as const;

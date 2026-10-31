@@ -4,10 +4,11 @@
  */
 import type { AiInput } from '../shared/aiContracts.js';
 import { CATEGORY_IDS } from '../shared/schemas.js';
+import { redactContacts } from '../src/domain/grounding.js';
 import { templateFor } from '../src/domain/templates/index.js';
 
 /** Bump when a prompt changes, so cached answers from the old prompt are not reused. */
-export const PROMPT_VERSION = '1';
+export const PROMPT_VERSION = '2';
 
 export const SYSTEM_INSTRUCTION = [
   'You read text for Bandobast, a celebration planner for Indian families and community groups.',
@@ -18,8 +19,12 @@ export const SYSTEM_INSTRUCTION = [
   'Understand English and everyday Hinglish, for example log = guests, kam = less, zyada = more, pehle = earlier, baad = later.',
 ].join('\n');
 
+/**
+ * Fences text that came from the user (or from the plan the user edited) as data.
+ * Contacts are removed again here, for callers that skip the browser's redaction.
+ */
 const fence = (text: string): string =>
-  `<user_text>\n${text.replaceAll('</user_text>', '')}\n</user_text>`;
+  `<user_text>\n${redactContacts(text).replace(/<\/?user_text>/giu, '')}\n</user_text>`;
 
 export function intakePrompt(input: AiInput<'intake'>): string {
   return [
@@ -79,7 +84,7 @@ export function ideasPrompt(input: AiInput<'ideas'>): string {
     `About ${String(input.guests)} guests; diet ${input.diet}; style ${input.style}; guests include: ${input.audience.join(', ') || 'no special needs'}.`,
     `City (data): ${fence(input.city)}`,
     input.refinement === null ? '' : `Focus on ${REFINEMENT_TEXT[input.refinement]}.`,
-    `Already shown, do not repeat: ${shown}.`,
+    `Already shown, do not repeat (data): ${fence(shown)}`,
     `Each idea uses one category from: ${categories}. costLevel 1 (low) to 3 (high), relative to the other ideas.`,
     'No prices, phone numbers, websites or business names. Title up to 8 words; description one sentence.',
   ]
@@ -102,7 +107,7 @@ export function explainPrompt(input: AiInput<'explain'>): string {
     'Task: in two or three short sentences, tell a family how these budget options differ and which hurts their priorities least.',
     'Write no digits at all. Mention amounts only through these placeholders, copied exactly:',
     input.placeholders.map((key) => `{{${key}}}`).join(' '),
-    'Options, least painful first:',
-    options,
+    'Options, least painful first (data):',
+    fence(options),
   ].join('\n');
 }

@@ -6,7 +6,7 @@ describe('readEnv', () => {
     for (const source of [{}, { GEMINI_API_KEY: '  ', UPSTASH_REDIS_REST_URL: '' }]) {
       expect(readEnv(source)).toEqual({
         geminiApiKey: null,
-        models: ['gemini-3.8-flash', 'gemini-3.5-flash-lite'],
+        models: ['gemini-3.5-flash-lite', 'gemini-3.8-flash'],
         redis: null,
         salt: '',
       });

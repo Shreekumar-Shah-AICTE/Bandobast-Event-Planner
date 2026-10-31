@@ -47,7 +47,10 @@ const byRules = <T>(value: T, note: string | null): Reading<T> => ({
 
 const isChange = (change: Change | null): change is Change => change !== null;
 
-/** Change request → changes. Clauses the AI could not map get a second try with the rules. */
+/**
+ * Change request → changes. Clauses the AI could not map get a second try with the rules.
+ * Phone numbers and e-mails are removed before sending.
+ */
 export async function readChange(
   text: string,
   profile: EventProfile,
@@ -56,7 +59,11 @@ export async function readChange(
 ): Promise<Reading<ParsedChanges>> {
   const { tasks } = templateFor(profile.eventType);
   const rules = parseChangeText(text, tasks, today);
-  const ai = await askAi('change', { text, today, eventType: profile.eventType }, signal);
+  const ai = await askAi(
+    'change',
+    { text: redactContacts(text), today, eventType: profile.eventType },
+    signal,
+  );
   if (!ai.ok) return byRules(rules, FALLBACK_NOTES[ai.reason]);
   const changes = ai.data.changes.map(changeFromWire).filter(isChange);
   if (changes.length === 0) return byRules(rules, null);
@@ -73,14 +80,18 @@ function draftFromAi(out: AiOutput<'intake'>, today: IsoDate): IntakeDraft {
   return sanitise(Object.fromEntries(present), today);
 }
 
-/** One message describing the event → profile fields (the AI fills what the rules miss). */
+/**
+ * One message describing the event → profile fields. Fields the AI read (and the server
+ * checked) take precedence; the rules fill whatever the AI left empty. Phone numbers and
+ * e-mails are removed before sending.
+ */
 export async function readIntake(
   text: string,
   today: IsoDate,
   signal: AbortSignal,
 ): Promise<Reading<IntakeDraft>> {
   const rules = readFreeText(text, today);
-  const ai = await askAi('intake', { text, today }, signal);
+  const ai = await askAi('intake', { text: redactContacts(text), today }, signal);
   if (!ai.ok) return byRules(rules, FALLBACK_NOTES[ai.reason]);
   return byAi({ ...rules, ...draftFromAi(ai.data, today) }, ai.model);
 }
