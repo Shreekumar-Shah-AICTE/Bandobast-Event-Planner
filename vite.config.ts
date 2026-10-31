@@ -8,6 +8,17 @@ export default defineConfig({
     sourcemap: false,
     // Fail loudly if the main bundle grows past what a planning app needs.
     chunkSizeWarningLimit: 250,
+    rolldownOptions: {
+      output: {
+        // Libraries change less often than the app, so they get their own long-cached files.
+        codeSplitting: {
+          groups: [
+            { name: 'react', test: /node_modules[\\/](react|react-dom|scheduler)[\\/]/ },
+            { name: 'zod', test: /node_modules[\\/]zod[\\/]/ },
+          ],
+        },
+      },
+    },
   },
   test: {
     projects: [
