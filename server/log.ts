@@ -1,6 +1,6 @@
 /**
  * One structured line per request. Never logs request text, IPs or keys —
- * only the task, outcome, status, model and timing.
+ * only the task, outcome, status, models tried and timing.
  */
 export interface RequestLog {
   readonly task: string;
@@ -8,6 +8,8 @@ export interface RequestLog {
   readonly outcome: string;
   readonly ms: number;
   readonly model?: string;
+  /** Each model tried, as `model:outcome`, for example `gemini-3.8-flash:timeout,gemini-3.5-flash-lite:ok`. */
+  readonly attempts?: string;
 }
 
 export type Logger = (entry: RequestLog) => void;

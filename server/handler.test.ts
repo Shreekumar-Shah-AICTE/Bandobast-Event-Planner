@@ -279,7 +279,13 @@ describe('a valid change request is answered, checked and cached', () => {
     });
     const response = await handle(post('change', CHANGE_INPUT));
     expect(await read(response)).toMatchObject({ ok: true, model: 'model-b' });
-    expect(logs[0]).toMatchObject({ outcome: 'ok', model: 'model-b', status: 200 });
+    expect(logs[0]).toMatchObject({
+      outcome: 'ok',
+      model: 'model-b',
+      status: 200,
+      attempts: 'model-a:error,model-b:ok',
+    });
+    expect(response.headers.get('server-timing')).toBe('ai;dur=0;desc="model-a:error,model-b:ok"');
   });
 
   it('drops a change whose evidence is not in the request', async () => {
@@ -318,6 +324,7 @@ describe('a valid change request is answered, checked and cached', () => {
       outcome: 'ok',
       ms: 0,
       model: 'model-a',
+      attempts: 'model-a:ok',
     });
   });
 });

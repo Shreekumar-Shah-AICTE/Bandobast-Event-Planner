@@ -5,7 +5,7 @@ anniversaries and community events. It builds a budget, a timeline, vendor check
 When something changes, like more guests, a smaller budget, an earlier date or a new quote, it shows exactly what
 moved and how to rebalance.
 
-**Live app:** https://bandobast.vercel.app · **Stack:** React 19, TypeScript, Vite, Vercel Functions, Gemini API,
+**Live app:** https://bandobast-event-planner.vercel.app · **Stack:** React 19, TypeScript, Vite, Vercel Functions, Gemini API,
 Upstash Redis
 
 > Gemini reads the messy text: change requests in English or Hinglish, pasted vendor quotes, free-text event
@@ -119,7 +119,7 @@ flowchart LR
   Upstash Redis. If the store can't be reached, requests are refused. Clients are keyed by a salted SHA-256 hash of
   the platform-set IP, never the raw address.
 - **Privacy:** phone numbers and e-mails are removed in the browser before text goes to the AI. Ideas requests carry
-  no names. Logs hold only the task, status, model and timing. Plans stay in your browser.
+  no names. Logs hold only the task, status, models tried and timing. Plans stay in your browser.
 - **Output is data, never markup:** React escapes all text, there is no `dangerouslySetInnerHTML`, and links are
   built only from Google's URL formats. Headers in [`vercel.json`](vercel.json): strict CSP with no
   `unsafe-inline` or `unsafe-eval` (zod runs without its eval fast path), HSTS, `nosniff`, `X-Frame-Options: DENY`,

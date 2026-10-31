@@ -65,13 +65,19 @@ export function createHandler(deps: HandlerDeps): (request: Request) => Promise<
     const started = deps.now();
     const name = new URL(request.url).pathname.replace(/^.*\//u, '');
     const task = AiTaskSchema.safeParse(name);
-    const done = (response: Response, outcome: string, model?: string): Response => {
+    const done = (
+      response: Response,
+      outcome: string,
+      model?: string,
+      attempts?: string,
+    ): Response => {
       deps.log({
         task: task.success ? task.data : 'unknown',
         status: response.status,
         outcome,
         ms: deps.now() - started,
         ...(model === undefined ? {} : { model }),
+        ...(attempts === undefined ? {} : { attempts }),
       });
       return response;
     };
@@ -104,7 +110,8 @@ interface Job {
   readonly started: number;
 }
 
-type Reply = [Response, string, string?];
+/** Response, log outcome, answering model, models tried. */
+type Reply = [Response, string, (string | undefined)?, string?];
 type HeaderMap = Record<string, string>;
 
 async function serve(job: Job, deps: LiveDeps): Promise<Reply> {
@@ -136,6 +143,13 @@ const describe = (attempts: readonly Attempt[]): string =>
       status === undefined ? `${model}:${outcome}` : `${model}:${outcome}-${String(status)}`,
     )
     .join(',');
+
+/**
+ * Standard Server-Timing header: the browser's network panel shows how long the AI step took
+ * and which models were tried. Holds no user data.
+ */
+const serverTiming = (attempts: string, ms: number): string =>
+  `ai;dur=${String(ms)};desc="${attempts}"`;
 
 async function answer(
   { task, job, started }: Job,
@@ -169,16 +183,21 @@ async function answer(
     now: deps.now,
   });
   const last = attempts.at(-1);
+  const trace = describe(attempts);
+  const timed = { ...headers, 'Server-Timing': serverTiming(trace, deps.now() - started) };
   if (last?.outcome !== 'ok') {
     return [
-      fail(STATUS.badGateway, 'AI answer failed checks; using built-in rules.', { headers }),
-      describe(attempts),
+      fail(STATUS.badGateway, 'AI answer failed checks; using built-in rules.', { headers: timed }),
+      trace,
+      undefined,
+      trace,
     ];
   }
   if (cache !== null) await within(cache.set(key, last.value), timing.storeTimeoutMs, undefined);
   return [
-    json({ ok: true, data: last.value, model: last.model }, STATUS.ok, headers),
+    json({ ok: true, data: last.value, model: last.model }, STATUS.ok, timed),
     'ok',
     last.model,
+    trace,
   ];
 }
