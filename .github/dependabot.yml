@@ -7,6 +7,11 @@ updates:
     groups:
       dev-tools:
         dependency-type: development
+        update-types: [minor, patch]
+    ignore:
+      # Major versions change APIs; they are upgraded by hand with the full check run.
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
   - package-ecosystem: github-actions
     directory: /
     schedule:
