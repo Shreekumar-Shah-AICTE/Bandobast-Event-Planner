@@ -29,4 +29,7 @@ export const LIMITS = {
   /** Highest GST slab in India (28%). */
   maxGstRatePct: 28,
   maxExplainLength: 600,
+  /** Rebalance options shown at once. */
+  maxScenarios: 3,
+  maxPlaceholders: 60,
 } as const;

@@ -28,6 +28,12 @@ export const VENDOR_STATUSES = ['todo', 'contacted', 'quoted', 'booked'] as cons
 export const STRATEGIES = ['balanced', 'protect', 'share'] as const;
 export const QUOTE_UNITS = ['perGuest', 'fixed', 'perHour', 'perDay', 'perPiece'] as const;
 export const GST_MODES = ['included', 'extra', 'unknown'] as const;
+/** Relative cost of an idea, never a price: 1 = ₹, 2 = ₹₹, 3 = ₹₹₹. */
+export const COST_LEVELS = { low: 1, medium: 2, high: 3 } as const;
+export const CostLevelSchema = z.literal([COST_LEVELS.low, COST_LEVELS.medium, COST_LEVELS.high]);
+export const IDEA_TAGS = ['elders', 'kids', 'eco', 'traditional', 'modern', 'accessible'] as const;
+/** Ways to steer the idea list ("cheaper", "more traditional", …). */
+export const REFINEMENTS = ['cheaper', 'traditional', 'kids', 'elders', 'eco'] as const;
 
 export const EventTypeSchema = z.enum(EVENT_TYPES);
 export const CategoryIdSchema = z.enum(CATEGORY_IDS);
@@ -173,4 +179,5 @@ export type Strategy = Settings['strategy'];
 export type VendorStatus = (typeof VENDOR_STATUSES)[number];
 export type PlanInput = z.infer<typeof PlanInputSchema>;
 export type Change = z.infer<typeof ChangeSchema>;
+export type CostLevel = z.infer<typeof CostLevelSchema>;
 export type PlanVersion = z.infer<typeof PlanVersionSchema>;

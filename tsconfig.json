@@ -6,5 +6,5 @@
     "moduleResolution": "NodeNext",
     "types": ["node"]
   },
-  "include": ["api", "shared", "src/domain"]
+  "include": ["api", "server", "shared", "src/domain"]
 }

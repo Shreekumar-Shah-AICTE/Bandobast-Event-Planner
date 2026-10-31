@@ -1,14 +1,13 @@
 /** Curated ideas per event type. Cost is a level (1 = ₹, 3 = ₹₹₹), never a price. */
-import type { CategoryId, EventType } from '../../shared/schemas.js';
+import type { CategoryId, CostLevel, EventType, IDEA_TAGS } from '../../shared/schemas.js';
 
-export const IDEA_TAGS = ['elders', 'kids', 'eco', 'traditional', 'modern', 'accessible'] as const;
 export type IdeaTag = (typeof IDEA_TAGS)[number];
 
 export interface LibraryIdea {
   readonly title: string;
   readonly description: string;
   readonly category: CategoryId;
-  readonly costLevel: 1 | 2 | 3;
+  readonly costLevel: CostLevel;
   readonly tags: readonly IdeaTag[];
 }
 

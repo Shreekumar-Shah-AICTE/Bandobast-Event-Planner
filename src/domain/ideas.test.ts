@@ -39,7 +39,11 @@ describe('Ideas: AI ideas must pass code checks', () => {
     tags: ['traditional'],
     ...overrides,
   });
-  const context = { profile, refinement: null, shown: suggestIdeas(profile, null) };
+  const context = {
+    eventType: profile.eventType,
+    refinement: null,
+    shown: suggestIdeas(profile, null),
+  };
 
   it('keeps a clean idea and gives it an AI id', () => {
     expect(acceptAiIdeas([idea({})], context)).toEqual([
@@ -64,7 +68,7 @@ describe('Ideas: AI ideas must pass code checks', () => {
       id: 'lib-wedding-0',
       source: 'library' as const,
     }));
-    const cheaper = { profile, refinement: 'cheaper' as const, shown };
+    const cheaper = { eventType: profile.eventType, refinement: 'cheaper' as const, shown };
     expect(
       acceptAiIdeas([idea({ title: 'Dear', costLevel: 3 }), idea({ title: 'Lean' })], cheaper).map(
         (entry) => entry.title,

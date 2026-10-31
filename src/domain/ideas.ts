@@ -3,13 +3,12 @@
  * pass code checks (no prices, contacts or business names; known categories;
  * "cheaper" really is cheaper).
  */
-import type { CategoryId, EventProfile } from '../../shared/schemas.js';
+import type { CategoryId, EventProfile, EventType, REFINEMENTS } from '../../shared/schemas.js';
 import { MAX_COST_LEVEL } from './constants.js';
 import { mentionsPriceOrVendor } from './grounding.js';
 import { IDEA_LIBRARY, type IdeaTag, type LibraryIdea } from './ideaLibrary.js';
 import { templateFor } from './templates/index.js';
 
-export const REFINEMENTS = ['cheaper', 'traditional', 'kids', 'elders', 'eco'] as const;
 export type Refinement = (typeof REFINEMENTS)[number];
 
 export interface Idea extends LibraryIdea {
@@ -67,9 +66,10 @@ const slug = (title: string): string =>
 
 /** Context for {@link acceptAiIdeas}. */
 export interface IdeaContext {
-  readonly profile: EventProfile;
+  readonly eventType: EventType;
   readonly refinement: Refinement | null;
-  readonly shown: readonly Idea[];
+  /** Ideas already on screen (titles must not repeat; "cheaper" must beat their cost). */
+  readonly shown: readonly Pick<LibraryIdea, 'title' | 'costLevel'>[];
 }
 
 /**
@@ -80,9 +80,7 @@ export function acceptAiIdeas(
   candidates: readonly LibraryIdea[],
   context: IdeaContext,
 ): readonly Idea[] {
-  const allowed = new Set<CategoryId>(
-    templateFor(context.profile.eventType).categories.map((c) => c.id),
-  );
+  const allowed = new Set<CategoryId>(templateFor(context.eventType).categories.map((c) => c.id));
   const seen = new Set(context.shown.map((idea) => idea.title.toLowerCase()));
   const average =
     context.shown.reduce((sum, idea) => sum + idea.costLevel, 0) /
