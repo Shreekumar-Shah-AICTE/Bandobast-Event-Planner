@@ -3,7 +3,6 @@ import { daysBetween, formatDate, type IsoDate } from '../../domain/dates.js';
 import { formatInr, type Paise } from '../../domain/money.js';
 import type { Plan } from '../../domain/plan.js';
 import { EVENT_LABELS, plural } from '../common/format.js';
-import { useFocusOnMount } from '../common/hooks.js';
 import { FeasibilityBadge } from '../common/Labels.js';
 
 /** "Short by ₹50,000" or "₹1,20,000 to spare", against typical costs plus the reserve. */
@@ -17,12 +16,11 @@ const timeLeft = (today: IsoDate, date: IsoDate): string => {
 };
 
 export function PlanHeader({ plan, today }: { readonly plan: Plan; readonly today: IsoDate }) {
-  const heading = useFocusOnMount<HTMLHeadingElement>();
   const { profile } = plan.input;
   const booked = plan.vendors.filter((card) => card.status === 'booked').length;
   return (
     <header className="plan-header">
-      <h1 id="plan-title" ref={heading} tabIndex={-1}>
+      <h1 id="plan-title" tabIndex={-1}>
         {profile.title}
       </h1>
       <p className="plan-meta">

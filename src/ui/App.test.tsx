@@ -12,7 +12,8 @@ import { SAMPLE_CHANGE } from '../sample.js';
 describe('App', () => {
   it('welcomes a new visitor and opens the sample plan', async () => {
     const { user } = renderApp();
-    expect(screen.getByRole('heading', { level: 1 })).toHaveFocus();
+    // On page load the browser keeps its own start point, so the skip link comes first.
+    expect(screen.getByRole('heading', { level: 1 })).not.toHaveFocus();
     await user.click(screen.getByRole('button', { name: /Try the sample/ }));
     expect(screen.getByRole('heading', { level: 1, name: "Riya & Arjun's wedding" })).toHaveFocus();
     await waitFor(() => {

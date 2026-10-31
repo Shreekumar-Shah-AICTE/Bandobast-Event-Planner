@@ -2,7 +2,6 @@
 import { useEffect, useRef, useState, type SyntheticEvent } from 'react';
 import type { EventProfile } from '../../../shared/schemas.js';
 import type { IsoDate } from '../../domain/dates.js';
-import { useFocusOnMount } from '../common/hooks.js';
 import { DescribeBox } from './DescribeBox.js';
 import { EventFields, PreferenceFields } from './IntakeFields.js';
 import { EMPTY_FORM, fillFrom, validate, type FieldError, type FormValues } from './form.js';
@@ -45,7 +44,6 @@ function ErrorSummary({ errors }: { readonly errors: readonly FieldError[] }) {
 }
 
 export function Intake({ today, onDone, onCancel }: IntakeProps) {
-  const heading = useFocusOnMount<HTMLHeadingElement>();
   const [values, setValues] = useState<FormValues>(EMPTY_FORM);
   const [errors, setErrors] = useState<readonly FieldError[]>([]);
   const change = (patch: Partial<FormValues>) => {
@@ -59,7 +57,7 @@ export function Intake({ today, onDone, onCancel }: IntakeProps) {
   };
   return (
     <section className="intake" aria-labelledby="intake-title">
-      <h1 id="intake-title" ref={heading} tabIndex={-1}>
+      <h1 id="intake-title" tabIndex={-1}>
         Tell us about your event
       </h1>
       <DescribeBox

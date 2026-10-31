@@ -1,5 +1,6 @@
 /** The whole app: welcome, the intake form, or the plan dashboard. */
 import { useState } from 'react';
+import { useScreenFocus } from './common/hooks.js';
 import type { EventProfile } from '../../shared/schemas.js';
 import type { IsoDate } from '../domain/dates.js';
 import { sampleProfile } from '../sample.js';
@@ -32,6 +33,7 @@ function Screen({ store, today }: ScreenProps) {
   const [intake, setIntake] = useState(false);
   const { state, dispatch } = store;
   const version = currentVersion(state);
+  useScreenFocus(version !== null ? 'plan' : intake ? 'intake' : 'welcome');
   const start = (profile: EventProfile) => {
     dispatch({ type: 'start', profile, today });
     setIntake(false);

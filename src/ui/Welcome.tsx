@@ -1,5 +1,4 @@
 /** First screen: what Bandobast does, and two ways to start. */
-import { useFocusOnMount } from './common/hooks.js';
 
 interface WelcomeProps {
   readonly onStart: () => void;
@@ -7,10 +6,9 @@ interface WelcomeProps {
 }
 
 export function Welcome({ onStart, onSample }: WelcomeProps) {
-  const heading = useFocusOnMount<HTMLHeadingElement>();
   return (
     <section className="welcome" aria-labelledby="welcome-title">
-      <h1 id="welcome-title" ref={heading} tabIndex={-1}>
+      <h1 id="welcome-title" tabIndex={-1}>
         Plan your celebration, and keep the plan true when things change
       </h1>
       <p className="lead">

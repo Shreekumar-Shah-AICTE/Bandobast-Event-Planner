@@ -66,3 +66,16 @@ export function useAsk<T>(): Ask<T> {
   }, [fresh]);
   return { busy, result, run, clear };
 }
+
+/**
+ * Moves focus to the new screen's main heading when the screen changes. Not on
+ * page load: the browser's own start point (and the skip link) comes first.
+ */
+export function useScreenFocus(screen: string): void {
+  const shown = useRef(screen);
+  useEffect(() => {
+    if (shown.current === screen) return;
+    shown.current = screen;
+    document.querySelector<HTMLElement>('main h1')?.focus();
+  }, [screen]);
+}
