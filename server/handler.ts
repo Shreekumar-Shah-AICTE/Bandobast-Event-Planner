@@ -4,7 +4,7 @@
  * checks. Every failure tells the client whether to fall back to its rules, and
  * the whole request fits one time budget (shared/timing.ts).
  */
-import { AiTaskSchema, type AiTask } from '../shared/aiContracts.js';
+import { AiTaskSchema, CACHED_MODEL, type AiTask } from '../shared/aiContracts.js';
 import type { ServerEnv } from './env.js';
 import { STATUS, fail, json } from './http.js';
 import type { Logger } from './log.js';
@@ -147,7 +147,10 @@ async function answer(
   const stored = cache === null ? null : await within(cache.get(key), timing.storeTimeoutMs, null);
   const cached = job.accept(stored);
   if (cached.ok) {
-    return [json({ ok: true, data: cached.value, model: 'cache' }, STATUS.ok, headers), 'cache'];
+    return [
+      json({ ok: true, data: cached.value, model: CACHED_MODEL }, STATUS.ok, headers),
+      'cache',
+    ];
   }
   const attempts = await firstValid({
     models: deps.env.models,

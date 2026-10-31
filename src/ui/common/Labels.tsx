@@ -2,6 +2,7 @@
 import type { Feasibility, Provenance } from '../../domain/budget.js';
 import type { TaskStatus } from '../../domain/timeline.js';
 import type { Reading } from '../../ai/readers.js';
+import { CACHED_MODEL } from '../../../shared/aiContracts.js';
 
 export const PROVENANCE_LABELS: Readonly<Record<Provenance, string>> = {
   estimate: 'Estimate',
@@ -36,11 +37,17 @@ export function TaskStatusBadge({ status }: { readonly status: TaskStatus }) {
   return <span className={`badge badge-task-${status}`}>{TASK_STATUS_LABELS[status]}</span>;
 }
 
+function aiNote(model: string | null): string {
+  return model === CACHED_MODEL
+    ? 'Read by Gemini earlier (a saved answer for the same text), then checked by code.'
+    : `Read by Gemini (${model ?? 'model'}), then checked by code.`;
+}
+
 /** "Read by Gemini (model)" or "Read by the built-in rules", plus why. */
 export function SourceNote({ reading }: { readonly reading: Reading<unknown> }) {
   const who =
     reading.source === 'ai'
-      ? `Read by Gemini (${reading.model ?? 'model'}), then checked by code.`
+      ? aiNote(reading.model)
       : (reading.note ?? 'Read by the built-in rules.');
   return (
     <p className="source-note">

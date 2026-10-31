@@ -176,7 +176,10 @@ export const AI_CONTRACTS = {
 export type AiInput<T extends AiTask> = z.infer<(typeof AI_CONTRACTS)[T]['input']>;
 export type AiOutput<T extends AiTask> = z.infer<(typeof AI_CONTRACTS)[T]['output']>;
 
-/** Successful response body; `model` names the Gemini model that answered (or "cache"). */
+/** The `model` value when the answer comes from the 24-hour answer cache. */
+export const CACHED_MODEL = 'cache';
+
+/** Successful response body; `model` names the Gemini model that answered, or CACHED_MODEL. */
 export interface AiSuccess<T extends AiTask> {
   readonly ok: true;
   readonly data: AiOutput<T>;
