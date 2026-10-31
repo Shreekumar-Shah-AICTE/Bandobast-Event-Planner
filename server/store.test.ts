@@ -37,6 +37,7 @@ vi.mock('@upstash/ratelimit', () => ({
 }));
 
 const CLIENT = 'bandobast:rl:client';
+const CLIENT_DAY = 'bandobast:rl:client-day';
 const DAILY = 'bandobast:rl:daily';
 const window = (overrides: Partial<Window> = {}): Window => ({
   success: true,
@@ -54,15 +55,16 @@ beforeEach(() => {
 });
 
 describe('upstashLimiter', () => {
-  it('configures a per-client sliding window and a daily ceiling that never use memory', () => {
+  it('configures a per-client window, a per-client daily cap and a daily ceiling, none in memory', () => {
     upstashLimiter(redis);
-    expect(state.configs.map((config) => config.prefix)).toEqual([CLIENT, DAILY]);
+    expect(state.configs.map((config) => config.prefix)).toEqual([CLIENT, CLIENT_DAY, DAILY]);
     expect(state.configs[0]).toMatchObject({
       ephemeralCache: false,
       timeout: 1_500,
       limiter: { kind: 'sliding', requests: 12, window: '60 s' },
     });
-    expect(state.configs[1]?.limiter).toEqual({ kind: 'fixed', requests: 3_000, window: '1 d' });
+    expect(state.configs[1]?.limiter).toEqual({ kind: 'fixed', requests: 200, window: '1 d' });
+    expect(state.configs[2]?.limiter).toEqual({ kind: 'fixed', requests: 3_000, window: '1 d' });
   });
 
   it('allows a request inside both limits and waits for pending writes', async () => {
@@ -74,6 +76,7 @@ describe('upstashLimiter', () => {
       }, 5);
     });
     state.replies.set(CLIENT, () => Promise.resolve(window({ pending })));
+    state.replies.set(CLIENT_DAY, () => Promise.resolve(window({ limit: 200 })));
     state.replies.set(DAILY, () => Promise.resolve(window({ limit: 3_000 })));
     const decision = await upstashLimiter(redis).check('client-key');
     expect(decision).toEqual({
@@ -93,6 +96,13 @@ describe('upstashLimiter', () => {
       reason: 'client',
     });
     state.replies.set(CLIENT, () => Promise.resolve(window()));
+    state.replies.set(CLIENT_DAY, () => Promise.resolve(window({ success: false, limit: 200 })));
+    expect(await upstashLimiter(redis).check('k')).toMatchObject({
+      allowed: false,
+      reason: 'client-daily',
+      limit: 200,
+    });
+    state.replies.set(CLIENT_DAY, () => Promise.resolve(window({ limit: 200 })));
     state.replies.set(DAILY, () => Promise.resolve(window({ success: false, limit: 3_000 })));
     expect(await upstashLimiter(redis).check('k')).toEqual({
       allowed: false,
@@ -108,6 +118,9 @@ describe('upstashLimiter', () => {
     state.replies.set(CLIENT, () => Promise.resolve(window({ reason: 'timeout' })));
     expect(await upstashLimiter(redis).check('k')).toMatchObject(unavailable);
     state.replies.set(CLIENT, () => Promise.resolve(window()));
+    state.replies.set(CLIENT_DAY, () => Promise.resolve(window({ reason: 'timeout' })));
+    expect(await upstashLimiter(redis).check('k')).toMatchObject(unavailable);
+    state.replies.set(CLIENT_DAY, () => Promise.resolve(window()));
     state.replies.set(DAILY, () => Promise.resolve(window({ reason: 'timeout' })));
     expect(await upstashLimiter(redis).check('k')).toMatchObject(unavailable);
     state.replies.set(CLIENT, () => Promise.reject(new Error('network')));

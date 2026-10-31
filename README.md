@@ -117,7 +117,7 @@ flowchart LR
 - **Checks before parsing:** POST only, JSON only, a same-site `Origin`, and a 16 KB body cap enforced while the body
   streams in ([`server/request.ts`](server/request.ts)). Then zod schemas for every input and every model answer,
   and the code checks listed above.
-- **Rate limits in a shared store, not in memory:** 12 requests per 60 s per client and 3,000 a day for the app, in
+- **Rate limits in a shared store, not in memory:** 12 requests per 60 s and 200 a day per client, and 3,000 a day for the app, in
   Upstash Redis. If the store can't be reached, requests are refused. Clients are keyed by a salted SHA-256 hash of
   the platform-set IP, never the raw address.
 - **Privacy:** phone numbers and e-mails are removed in the browser from every text sent to the AI (event
@@ -169,7 +169,7 @@ flowchart LR
 | Journeys        | The Change Test, the Gemini path, quotes, a new plan, the keyboard, axe, and no CSP violations under the production headers, on desktop and mobile                  | `e2e/plan.spec.ts`     |
 
 Coverage thresholds are enforced in [`vite.config.ts`](vite.config.ts): 95% overall and 100% of lines for the planning
-engine. Today: 330 unit and component tests, 99.7% of lines, 98% of branches, plus 14 browser runs. CI runs
+engine. Today: 339 unit and component tests, 99.7% of lines, 98% of branches, plus 14 browser runs. CI runs
 everything on every push ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
 
 ## Claims you can check

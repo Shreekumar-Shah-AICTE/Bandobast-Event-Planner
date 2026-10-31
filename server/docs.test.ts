@@ -17,11 +17,13 @@ const seconds = (ms: number): string => `${String(ms / 1000)} s`;
 
 describe('numbers quoted in the docs', () => {
   it('match the rate limits', () => {
-    const { rateLimit, dailyLimit } = SERVER_CONFIG;
+    const { rateLimit, clientDailyLimit, dailyLimit } = SERVER_CONFIG;
     const perClient = `${String(rateLimit.requests)} requests per ${rateLimit.window}`;
+    const clientDaily = `${String(clientDailyLimit.requests)} a day per client`;
     const daily = `${dailyLimit.requests.toLocaleString('en-US')} a day`;
     for (const doc of [readme, security]) {
       expect(doc).toContain(perClient);
+      expect(doc).toContain(clientDaily);
       expect(doc).toContain(daily);
     }
     expect(security).toContain(`after ${seconds(SERVER_CONFIG.limiterTimeoutMs)}`);

@@ -1,6 +1,6 @@
 /**
  * Shared-store safeguards on Upstash Redis: a per-client sliding window, a
- * whole-app daily ceiling, and a short-lived answer cache. Rate limiting fails
+ * per-client daily cap, a whole-app daily ceiling, and a short-lived answer cache. Rate limiting fails
  * closed — if the store is slow or down, the request is refused, never waved through.
  */
 import { Ratelimit } from '@upstash/ratelimit';
@@ -9,7 +9,7 @@ import { SERVER_CONFIG } from './config.js';
 
 export interface LimitDecision {
   readonly allowed: boolean;
-  readonly reason: 'ok' | 'client' | 'daily' | 'unavailable';
+  readonly reason: 'ok' | 'client' | 'client-daily' | 'daily' | 'unavailable';
   readonly limit: number;
   readonly remaining: number;
   /** Unix time in ms when the window resets. */
@@ -50,7 +50,7 @@ const deny = (reason: LimitDecision['reason'], window: Window): LimitDecision =>
   resetMs: window.reset,
 });
 
-/** Per-client and daily limits in Redis (no in-memory state across requests). O(1) round trips. */
+/** Per-client, per-client daily and whole-app daily limits in Redis (no in-memory state). O(1) round trips. */
 export function upstashLimiter(redis: Redis): Limiter {
   const common = {
     redis,
@@ -58,11 +58,16 @@ export function upstashLimiter(redis: Redis): Limiter {
     timeout: SERVER_CONFIG.limiterTimeoutMs,
     analytics: false,
   } as const;
-  const { rateLimit, dailyLimit, keyPrefix } = SERVER_CONFIG;
+  const { rateLimit, clientDailyLimit, dailyLimit, keyPrefix } = SERVER_CONFIG;
   const perClient = new Ratelimit({
     ...common,
     prefix: `${keyPrefix}:rl:client`,
     limiter: Ratelimit.slidingWindow(rateLimit.requests, rateLimit.window),
+  });
+  const perClientDaily = new Ratelimit({
+    ...common,
+    prefix: `${keyPrefix}:rl:client-day`,
+    limiter: Ratelimit.fixedWindow(clientDailyLimit.requests, clientDailyLimit.window),
   });
   const daily = new Ratelimit({
     ...common,
@@ -75,6 +80,9 @@ export function upstashLimiter(redis: Redis): Limiter {
         const client = await decide(perClient, clientKey);
         if (client === null) return UNAVAILABLE;
         if (!client.success) return deny('client', client);
+        const clientDay = await decide(perClientDaily, clientKey);
+        if (clientDay === null) return UNAVAILABLE;
+        if (!clientDay.success) return deny('client-daily', clientDay);
         const app = await decide(daily, 'all');
         if (app === null) return UNAVAILABLE;
         if (!app.success) return deny('daily', app);

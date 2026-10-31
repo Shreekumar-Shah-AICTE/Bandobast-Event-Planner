@@ -18,6 +18,8 @@ export const SERVER_CONFIG = {
   maxOutputTokens: { intake: 2048, change: 2048, quote: 3072, ideas: 3072, explain: 1536 },
   /** Per-client sliding window. */
   rateLimit: { requests: 12, window: '60 s' },
+  /** Per-client daily cap, so one client cannot use up the whole-app ceiling. */
+  clientDailyLimit: { requests: 200, window: '1 d' },
   /** Whole-app daily ceiling protecting the Gemini quota. */
   dailyLimit: { requests: 3000, window: '1 d' },
   /** Rate-limit store calls give up after this long and the request is refused. */
