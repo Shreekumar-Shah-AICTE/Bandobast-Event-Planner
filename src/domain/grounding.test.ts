@@ -34,6 +34,8 @@ describe('Quotes: grounding checks', () => {
     expect(mentionsPriceOrVendor('A chaat counter for about ₹20,000')).toBe(true);
     expect(mentionsPriceOrVendor('Book Sharma Caterers for the night')).toBe(true);
     expect(mentionsPriceOrVendor('See www.example.com')).toBe(true);
+    expect(mentionsPriceOrVendor('Call 98765 43210 for lights')).toBe(true);
+    expect(mentionsPriceOrVendor('Ring 9876543210 today')).toBe(true);
     expect(mentionsPriceOrVendor('A marigold photo corner for family groups')).toBe(false);
   });
 });

@@ -18,7 +18,8 @@ export function quotedFrom(quote: string, source: string): boolean {
   return needle.length > 0 && squash(source).includes(needle);
 }
 
-const PHONE_RE = /(?:\+?91[\s-]?)?(?:\d[\s-]?){9}\d\b/gu;
+const PHONE = String.raw`(?:\+?91[\s-]?)?(?:\d[\s-]?){9}\d\b`;
+const PHONE_RE = new RegExp(PHONE, 'gu');
 const EMAIL_RE = /[\w.+-]+@[\w-]+(?:\.[\w-]+)+/gu;
 
 /** Replaces phone numbers and e-mail addresses before text leaves the device. O(n). */
@@ -28,7 +29,7 @@ export function redactContacts(text: string): string {
 
 const PRICE_RE =
   /(₹|\brs\.?\s*\d|\binr\b|\d\s*(k|lakh|lakhs|lac|crore|cr)\b|\d[\d,]*\s*\/-|per plate)/iu;
-const CONTACT_RE = /(https?:\/\/|www\.|@[\w-]+\.|\+91|\b\d{10}\b)/iu;
+const CONTACT_RE = new RegExp(String.raw`(https?:\/\/|www\.|@[\w-]+\.|\+91|${PHONE})`, 'iu');
 const BUSINESS_RE =
   /\b[A-Z][\w&'-]*\s+(Caterers?|Decorators?|Studios?|Events|Banquets?|Photography|Pvt|Ltd|Enterprises)\b/u;
 
