@@ -13,6 +13,17 @@ Upstash Redis
 > answer before it is shown. When the AI is unavailable, built-in rules take over, and the app always says which of
 > the two read your text.
 
+## Quality at a glance
+
+| Area          | In short                                                                                                                                                    | Details                                                            |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| Problem fit   | Budgets, timelines, vendor checklists and personalised ideas for four event types, plus the Change Test and a quote checker                                 | [What the problem asks](#what-the-problem-asks-and-where-it-lives) |
+| Code quality  | Strict TypeScript with no `any`, a pure planning engine, zod contracts shared by browser and server. Lint enforces complexity ≤ 8 and functions ≤ 50 lines. | [Architecture](#architecture), [decisions](docs/decisions.md)      |
+| Security      | Server-only key, request checks before parsing, schemas both ways, rate limits in a shared store that fail closed, strict CSP                               | [Security](#security), [SECURITY.md](SECURITY.md)                  |
+| Efficiency    | AI only on request, a 24-hour answer cache, one time budget per request, about 131 kB of gzipped JavaScript                                                 | [Efficiency](#efficiency)                                          |
+| Testing       | Unit, property, component and browser tests, 99.7% line coverage, run in CI                                                                                 | [Testing](#testing), [claims](#claims-you-can-check)               |
+| Accessibility | WCAG 2.2 AA: no axe violations on any screen, keyboard tabs, managed focus, live regions                                                                    | [Accessibility](#accessibility-wcag-22-aa)                         |
+
 ## The Change Test: a 30-second demo
 
 1. Open the app and choose **Try the sample: Riya & Arjun's wedding, Pune** (200 guests, ₹12 lakh, 18 Feb 2027).
@@ -40,7 +51,7 @@ Every version is kept in **History** (the last 30), with what each one changed a
 count (minimum guarantees, GST), lines that may add cost ("transport extra as per actuals"), questions to ask, and a
 side-by-side comparison by worst-case total. A price that is not written in your text is never counted.
 
-## How Gemini is used, and how its answers are checked
+## How AI is used, and how its answers are checked
 
 | Task      | Gemini reads or writes                                                | Code checks before anything is shown                                                                                            | Without the AI                          |
 | --------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
@@ -98,26 +109,22 @@ flowchart LR
 
 ## Security
 
-- **The key stays on the server.** `GEMINI_API_KEY` exists only in the function's environment. Nothing uses a
-  `VITE_` prefix, and the CSP allows the page to connect only to its own origin.
-- **Checks run before anything is parsed:** POST only, JSON only, a same-site `Origin`, and a 16 KB body cap. The
-  cap is enforced while the body streams in, so a wrong `Content-Length` doesn't help an attacker
-  ([`server/request.ts`](server/request.ts)).
-- **Schemas both ways:** every input and every model answer is validated with zod, then checked by code, as listed
-  above.
-- **Rate limits live in a shared store, not in memory.** Each client gets 12 requests per 60 s, and the whole app
-  gets 3,000 a day, both in Upstash Redis. If the store can't be reached, requests are refused (fail closed). Clients
-  are keyed by a salted SHA-256 hash of the platform-set IP, so raw addresses are never stored.
-- **Privacy:** phone numbers and e-mail addresses are removed in the browser before text goes to the AI. Ideas
-  requests carry no names. Logs hold only the task, status, model and timing, never the text, IPs or keys. The plan
-  itself stays in your browser.
-- **AI output is data, never markup.** React escapes all text, the code has no `dangerouslySetInnerHTML`, and links
-  are built only from Google's URL formats.
-- **Headers** ([`vercel.json`](vercel.json)): a strict CSP (`default-src 'self'`, `frame-ancestors 'none'`), HSTS,
-  `nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, COOP/CORP and a locked-down Permissions-Policy.
-  API answers are `no-store`.
-- **Supply chain:** exact dependency versions with a lockfile, `npm audit` in CI, GitHub Actions pinned to commit
-  SHAs, and Dependabot. See [SECURITY.md](SECURITY.md).
+- **The key stays on the server.** `GEMINI_API_KEY` exists only in the function's environment, never with a `VITE_`
+  prefix. The CSP lets the page connect only to its own origin.
+- **Checks before parsing:** POST only, JSON only, a same-site `Origin`, and a 16 KB body cap enforced while the body
+  streams in ([`server/request.ts`](server/request.ts)). Then zod schemas for every input and every model answer,
+  and the code checks listed above.
+- **Rate limits in a shared store, not in memory:** 12 requests per 60 s per client and 3,000 a day for the app, in
+  Upstash Redis. If the store can't be reached, requests are refused. Clients are keyed by a salted SHA-256 hash of
+  the platform-set IP, never the raw address.
+- **Privacy:** phone numbers and e-mails are removed in the browser before text goes to the AI. Ideas requests carry
+  no names. Logs hold only the task, status, model and timing. Plans stay in your browser.
+- **Output is data, never markup:** React escapes all text, there is no `dangerouslySetInnerHTML`, and links are
+  built only from Google's URL formats. Headers in [`vercel.json`](vercel.json): strict CSP, HSTS, `nosniff`,
+  `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, COOP/CORP, a locked-down Permissions-Policy. API answers
+  are `no-store`.
+- **Supply chain:** exact versions with a lockfile, `npm audit` in CI, Actions pinned to commit SHAs, Dependabot.
+  The threat model is in [SECURITY.md](SECURITY.md).
 
 ## Efficiency
 
@@ -160,7 +167,24 @@ Coverage thresholds are enforced in [`vite.config.ts`](vite.config.ts): 95% over
 engine. Today: 322 unit and component tests, 99.7% of lines, 98% of branches, plus 12 browser runs. CI runs
 everything on every push ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
 
-## Run it locally
+## Claims you can check
+
+| Claim                                                                | Test                                                                                              |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| The budget split adds up to your total to the rupee, for any input   | `src/domain/budget.test.ts`: "Σ planned + contingency === total" (property)                       |
+| A delay moves a task and its successors, never its predecessors      | `src/domain/timeline.test.ts`: "holds for any task and any delay (property)"                      |
+| A quote amount counts only if it is written in the quote             | `src/domain/grounding.test.ts`: "rejects amounts the text does not contain"                       |
+| A change from Gemini is dropped unless its evidence is in your words | `server/handler.test.ts`: "drops a change whose evidence is not in the request"                   |
+| Explanations never contain numbers written by the model              | `server/handler.test.ts`: "answers 502 when an explanation contains digits"                       |
+| AI requests are refused when the rate-limit store is down            | `server/handler.test.ts`: "fails closed with 503 when the rate-limit store is unavailable"        |
+| The server answers before the browser and Vercel give up             | `server/timing.test.ts`: "lets the layers give up in order"                                       |
+| Request text is never logged                                         | `server/handler.test.ts`: "never logs the request text"                                           |
+| Hinglish change requests work without the AI                         | `src/domain/changeParser.test.ts`: "reads the same request in Hinglish"                           |
+| Phone numbers and e-mails never leave the device                     | `src/domain/grounding.test.ts`: "redacts phone numbers and e-mails before text leaves the device" |
+| Every screen passes axe-core WCAG 2.2 AA, on desktop and mobile      | `e2e/plan.spec.ts`: "every screen passes an automated WCAG 2.2 AA check"                          |
+| The numbers in these docs match the code                             | `server/docs.test.ts`                                                                             |
+
+## Run locally
 
 ```bash
 npm ci

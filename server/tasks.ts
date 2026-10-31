@@ -166,7 +166,7 @@ export interface PreparedTask {
  * patterns are left out (they can make a schema too complex to serve); zod
  * re-checks every one of them in code before an answer is used.
  */
-const MODEL_SCHEMA_KEYS = new Set([
+const MODEL_SCHEMA_KEYS: readonly string[] = [
   'type',
   'properties',
   'required',
@@ -177,14 +177,14 @@ const MODEL_SCHEMA_KEYS = new Set([
   'minItems',
   'maxItems',
   'description',
-]);
+];
 
 function forModel(node: unknown): unknown {
   if (Array.isArray(node)) return node.map(forModel);
   if (typeof node !== 'object' || node === null) return node;
   return Object.fromEntries(
     Object.entries(node)
-      .filter(([key]) => MODEL_SCHEMA_KEYS.has(key))
+      .filter(([key]) => MODEL_SCHEMA_KEYS.includes(key))
       .map(([key, value]) => [key, key === 'properties' ? eachProperty(value) : forModel(value)]),
   );
 }
