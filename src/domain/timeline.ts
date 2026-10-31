@@ -30,11 +30,12 @@ export interface ScheduledTask {
   /** Days that compressing this task would recover (0 when already compressed). */
   readonly savingDays: number;
   readonly tip: string | null;
+  readonly custom: boolean;
 }
 
 export interface Schedule {
   readonly tasks: readonly ScheduledTask[];
-  /** Open tasks with the least slack, in dependency order. */
+  /** Open built-in tasks with the least slack, in dependency order. */
   readonly criticalPath: readonly string[];
   readonly lateCount: number;
 }
@@ -157,12 +158,9 @@ export function schedule(params: ScheduleParams): Schedule {
   const timing = forwardPass(order, params.states, today);
   const latestFinish = backwardPass(order, timing, toDayNumber(params.eventDate));
   const rows = order.map((task) => toScheduled(task, params, timing, latestFinish));
-  const open = rows.filter((row) => row.status !== 'done');
-  const minSlack = Math.min(...open.map((row) => row.slack));
-  const tasks = rows.map((row) => ({
-    ...row,
-    critical: row.status !== 'done' && row.slack === minSlack,
-  }));
+  const onPath = (row: ScheduledTask): boolean => row.status !== 'done' && !row.custom;
+  const minSlack = Math.min(...rows.filter(onPath).map((row) => row.slack));
+  const tasks = rows.map((row) => ({ ...row, critical: onPath(row) && row.slack === minSlack }));
   return {
     tasks,
     criticalPath: tasks.filter((row) => row.critical).map((row) => row.id),
@@ -199,6 +197,7 @@ function toScheduled(
     compressed: state.compressed,
     savingDays: state.done || state.compressed ? 0 : task.durationDays - task.minDurationDays,
     tip: task.tip ?? null,
+    custom: task.custom ?? false,
   };
 }
 

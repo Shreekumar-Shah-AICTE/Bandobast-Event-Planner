@@ -1,6 +1,6 @@
 /**
  * The living plan: one pure function turns the user's inputs (profile, fixed
- * lines, task states, vendor statuses, quotes, payments, settings) into budget,
+ * lines, task states, custom tasks, vendor statuses, quotes, payments, settings) into budget,
  * scenarios, schedule, vendor cards, quote analyses and payment totals. Nothing is
  * stored that can be derived.
  */
@@ -14,6 +14,7 @@ import type {
 } from '../../shared/schemas.js';
 import { LIMITS } from '../../shared/limits.js';
 import { buildBudget, type BudgetParams, type BudgetPlan, type FixedLine } from './budget.js';
+import { asTemplate } from './customTasks.js';
 import type { IsoDate } from './dates.js';
 import { summarisePayments, type PaymentSummary } from './payments.js';
 import { analyseQuote, type QuoteAnalysis } from './quotes.js';
@@ -44,6 +45,7 @@ export function initialInput(profile: EventProfile): PlanInput {
     vendors: {},
     quotes: [],
     payments: [],
+    customTasks: [],
     settings: { strategy: 'balanced', formats: [], useContingency: false },
   };
 }
@@ -91,7 +93,7 @@ export function buildPlan(input: PlanInput, today: IsoDate): Plan {
   };
   const budget = buildBudget(budgetParams);
   const timeline = schedule({
-    tasks: template.tasks,
+    tasks: [...template.tasks, ...input.customTasks.map(asTemplate)],
     states: input.tasks,
     eventDate: input.profile.eventDate,
     today,

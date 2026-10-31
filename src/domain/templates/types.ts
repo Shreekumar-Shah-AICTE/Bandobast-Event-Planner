@@ -25,6 +25,8 @@ export interface TaskTemplate {
   readonly keywords: readonly string[];
   /** How to compress it when time runs short. */
   readonly tip?: string;
+  /** Added by the user: scheduled the same way, but never on the critical path. */
+  readonly custom?: boolean;
 }
 
 /** A way to change the event's format that lowers typical costs (multipliers are assumptions). */

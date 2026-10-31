@@ -118,6 +118,16 @@ export const PaymentSchema = z.object({
   paidOn: IsoDateSchema.optional(),
 });
 
+/**
+ * A task the user added. It is due `daysBefore` the event (negative = after it),
+ * so it moves with the event date like the built-in tasks. Ids never clash with theirs.
+ */
+export const CustomTaskSchema = z.object({
+  id: z.string().regex(/^my\d{1,3}$/u),
+  title: z.string().trim().min(1).max(LIMITS.maxTitleLength),
+  daysBefore: z.int().min(-LIMITS.maxDaysAfterEvent).max(LIMITS.maxDaysBeforeEvent),
+});
+
 export const SettingsSchema = z.object({
   strategy: z.enum(STRATEGIES),
   formats: z.array(z.string().min(1).max(LIMITS.maxIdLength)).max(LIMITS.maxIdeas),
@@ -130,8 +140,9 @@ export const PlanInputSchema = z.object({
   tasks: z.record(z.string().max(LIMITS.maxIdLength), TaskStateSchema),
   vendors: z.partialRecord(CategoryIdSchema, z.enum(VENDOR_STATUSES)),
   quotes: z.array(QuoteSchema).max(LIMITS.maxQuotes),
-  /** Plans saved before payments existed load with none. */
+  /** Plans saved before payments and custom tasks existed load with none. */
   payments: z.array(PaymentSchema).max(LIMITS.maxPayments).default([]),
+  customTasks: z.array(CustomTaskSchema).max(LIMITS.maxCustomTasks).default([]),
   settings: SettingsSchema,
 });
 
@@ -187,6 +198,7 @@ export type QuoteItem = z.infer<typeof QuoteItemSchema>;
 export type QuoteDraft = z.infer<typeof QuoteDraftSchema>;
 export type Quote = z.infer<typeof QuoteSchema>;
 export type Payment = z.infer<typeof PaymentSchema>;
+export type CustomTask = z.infer<typeof CustomTaskSchema>;
 export type Settings = z.infer<typeof SettingsSchema>;
 export type Strategy = Settings['strategy'];
 export type VendorStatus = (typeof VENDOR_STATUSES)[number];

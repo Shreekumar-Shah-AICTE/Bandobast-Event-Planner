@@ -468,6 +468,14 @@ textarea {
   max-width: 12rem;
 }
 
+.custom-task-form {
+  margin: 1rem 0 0.5rem;
+}
+
+.custom-task-form #custom-task-title {
+  max-width: 18rem;
+}
+
 .notice {
   background: var(--info-bg);
   color: var(--info);
@@ -502,6 +510,7 @@ textarea {
 
 .badge-user,
 .badge-quote,
+.badge-custom,
 .badge-source-ai {
   color: var(--info);
   background: var(--info-bg);

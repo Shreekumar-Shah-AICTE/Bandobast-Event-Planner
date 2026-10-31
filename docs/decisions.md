@@ -32,4 +32,4 @@ There are no accounts and no server database, so there are no personal data to b
 
 ## 8. A small dependency set
 
-The app uses React, zod, the Gemini SDK and the Upstash clients, with no UI framework or state library. The production JavaScript is about 135 kB gzipped.
+The app uses React, zod, the Gemini SDK and the Upstash clients, with no UI framework or state library. The production JavaScript is about 136 kB gzipped.

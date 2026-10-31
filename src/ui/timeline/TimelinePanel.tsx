@@ -1,4 +1,5 @@
-/** Timeline tab: every task by due date, ways to catch up, calendar links and an .ics export. */
+/** Timeline tab: every task by due date, your own tasks, ways to catch up, calendar links and an .ics export. */
+import { useRef, type RefObject } from 'react';
 import { buildIcs, calendarUrl, taskCalendarEntry } from '../../domain/calendar.js';
 import { formatDate, type IsoDate } from '../../domain/dates.js';
 import type { Plan } from '../../domain/plan.js';
@@ -7,6 +8,8 @@ import { downloadText } from '../common/download.js';
 import { plural } from '../common/format.js';
 import { TaskStatusBadge } from '../common/Labels.js';
 import type { PlanControls } from '../dashboard/controls.js';
+import { removeCustomTask } from '../../domain/customTasks.js';
+import { CustomTaskForm } from './CustomTaskForm.js';
 import { compress, setDone } from './taskEdits.js';
 
 /** "3 days to spare", "5 days late", "No days to spare", "Done". */
@@ -27,6 +30,7 @@ export function TimelinePanel({ controls }: { readonly controls: PlanControls })
   const { plan, today } = controls;
   const tasks = plan.schedule.tasks.toSorted((a, b) => a.due.localeCompare(b.due));
   const open = tasks.filter((task) => task.status !== 'done').length;
+  const nameRef = useRef<HTMLInputElement>(null);
   return (
     <section aria-labelledby="timeline-title">
       <h2 id="timeline-title">Timeline</h2>
@@ -51,22 +55,24 @@ export function TimelinePanel({ controls }: { readonly controls: PlanControls })
           </ul>
         </section>
       )}
+      <CustomTaskForm controls={controls} nameRef={nameRef} />
       <ol className="task-list">
         {tasks.map((task) => (
-          <TaskRow key={task.id} task={task} controls={controls} />
+          <TaskRow key={task.id} task={task} controls={controls} nameRef={nameRef} />
         ))}
       </ol>
     </section>
   );
 }
 
-function TaskRow({
-  task,
-  controls,
-}: {
+interface RowProps {
   readonly task: ScheduledTask;
   readonly controls: PlanControls;
-}) {
+  /** The custom-task name field, focused after a task is removed. */
+  readonly nameRef: RefObject<HTMLInputElement | null>;
+}
+
+function TaskRow({ task, controls, nameRef }: RowProps) {
   const { plan, today } = controls;
   const id = `task-${task.id}`;
   const critical = task.critical && task.status !== 'done';
@@ -82,22 +88,17 @@ function TaskRow({
           }}
         />
         <label htmlFor={id}>{task.title}</label> <TaskStatusBadge status={task.status} />
+        {task.custom && <span className="badge badge-custom">Your task</span>}
       </div>
       <p className="task-meta">
         {`Due ${formatDate(task.due)} · ${slackText(task)}${critical ? ' · On the critical path' : ''}${task.compressed ? ' · Shortened' : ''}`}
       </p>
-      <TaskActions task={task} controls={controls} />
+      <TaskActions task={task} controls={controls} nameRef={nameRef} />
     </li>
   );
 }
 
-function TaskActions({
-  task,
-  controls,
-}: {
-  readonly task: ScheduledTask;
-  readonly controls: PlanControls;
-}) {
+function TaskActions({ task, controls, nameRef }: RowProps) {
   const { input } = controls.plan;
   const { title, city } = input.profile;
   return (
@@ -121,6 +122,19 @@ function TaskActions({
         Add to Google Calendar
         <span className="visually-hidden">{`: ${task.title} (opens in a new tab)`}</span>
       </a>
+      {task.custom && (
+        <button
+          type="button"
+          className="link-button"
+          onClick={() => {
+            controls.edit(removeCustomTask(input, task.id));
+            nameRef.current?.focus();
+          }}
+        >
+          Remove
+          <span className="visually-hidden">{`: ${task.title}`}</span>
+        </button>
+      )}
     </div>
   );
 }

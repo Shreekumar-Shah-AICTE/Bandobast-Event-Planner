@@ -34,4 +34,10 @@ export const LIMITS = {
   maxPlaceholders: 60,
   /** Advances and instalments across all vendors. */
   maxPayments: 60,
+  /** Tasks the user adds to the built-in timeline. */
+  maxCustomTasks: 30,
+  /** Custom tasks can be due this long after the event (returns, thank-you notes). */
+  maxDaysAfterEvent: 60,
+  /** About five years: a custom task can be due this long before the event. */
+  maxDaysBeforeEvent: 1830,
 } as const;

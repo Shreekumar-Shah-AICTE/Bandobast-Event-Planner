@@ -13,7 +13,7 @@
 | Problem fit | Budgets, timelines, vendor checklists and personalised ideas for four event types, plus the Change Test and a quote checker | [What the problem asks](#what-the-problem-asks-and-where-it-lives) |
 | Code quality | Strict TypeScript with no `any`, a pure planning engine, zod contracts shared by browser and server. Lint enforces complexity ≤ 8 and functions ≤ 50 lines. | [Architecture](#architecture), [decisions](docs/decisions.md) |
 | Security | Server-only key, request checks before parsing, schemas both ways, rate limits in a shared store that fail closed, strict CSP | [Security](#security), [SECURITY.md](SECURITY.md) |
-| Efficiency | AI only on request, a 24-hour answer cache, one time budget per request, about 135 kB of gzipped JavaScript | [Efficiency](#efficiency) |
+| Efficiency | AI only on request, a 24-hour answer cache, one time budget per request, about 136 kB of gzipped JavaScript | [Efficiency](#efficiency) |
 | Testing | Unit, property, component and browser tests, 99.7% line coverage, run in CI | [Testing](#testing), [claims](#claims-you-can-check) |
 | Accessibility | WCAG 2.2 AA: no axe violations on any screen, keyboard tabs, managed focus, live regions | [Accessibility](#accessibility-wcag-22-aa) |
 
@@ -30,7 +30,7 @@ Every version is kept in **History** (the last 30), with what each one changed a
 | The problem statement asks for | What Bandobast does | Code |
 | --- | --- | --- |
 | **Budgets** | Splits your total across the lines this event needs, scaled by guest count and format. The split always adds up to your total to the rupee, and keeps a reserve for surprises (8% for weddings). Every amount is labelled **Estimate**, **Your number**, **Quote** or **Booked**. When the money falls short, it offers ranked rebalance options. | [`budget.ts`](src/domain/budget.ts), [`scenarios.ts`](src/domain/scenarios.ts) |
-| **Timelines** | Tasks with dependencies, scheduled with the critical-path method: slack, late and tight tasks, and catch-up options with the biggest saving first. Each task has a Google Calendar link, and you can download an `.ics` file. | [`timeline.ts`](src/domain/timeline.ts), [`calendar.ts`](src/domain/calendar.ts) |
+| **Timelines** | Tasks with dependencies, scheduled with the critical-path method: slack, late and tight tasks, and catch-up options with the biggest saving first. Add your own tasks with a due date; they move with the event date like the built-in ones. Each task has a Google Calendar link, and you can download an `.ics` file. | [`timeline.ts`](src/domain/timeline.ts), [`customTasks.ts`](src/domain/customTasks.ts), [`calendar.ts`](src/domain/calendar.ts) |
 | **Vendor checklists** | A card per vendor: what to ask for at this guest count, questions to ask before booking, a status (to contact → contacted → quote received → booked), advances and instalments with due dates (paid, due, overdue, and how much of a booking has no payment yet) and a Google Maps search in your city. | [`vendors.ts`](src/domain/vendors.ts), [`payments.ts`](src/domain/payments.ts) |
 | **Personalised ideas** | A curated library ranked for your guests (elders, kids, diet, style), steerable (cheaper, more traditional, kid-friendly, elder-friendly, eco-friendly), plus fresh ideas from Gemini that pass code checks. | [`ideas.ts`](src/domain/ideas.ts), [`ideaLibrary.ts`](src/domain/ideaLibrary.ts) |
 | **Weddings, birthdays, community events** | Four event templates (wedding, birthday, anniversary, community), each with its own budget lines, tasks and dependencies. | [`templates/`](src/domain/templates) |
@@ -99,7 +99,7 @@ flowchart LR
 - **AI only on request.** Planning, rebalancing, scheduling and diffs run in the browser in milliseconds. The engine's JSDoc notes the complexity of its functions.
 - **One time budget per AI request:** the server answers within 20 s, the browser waits 23 s, and Vercel stops the function at 25 s. A single model call gets at most 9 s, so two models fit. A test checks these numbers against each other and against `vercel.json` ([`server/timing.test.ts`](server/timing.test.ts)).
 - **Less work per answer:** a 24-hour answer cache, output token caps per task, low thinking, and requests from a screen you have left are cancelled.
-- **Small, cacheable bundle:** about 135 kB of gzipped JavaScript in three chunks (app, React, zod), no UI framework, and hashed assets cached for a year. Saves are debounced, and flushed when the tab is hidden.
+- **Small, cacheable bundle:** about 136 kB of gzipped JavaScript in three chunks (app, React, zod), no UI framework, and hashed assets cached for a year. Saves are debounced, and flushed when the tab is hidden.
 - **Close to the users:** the function runs in Mumbai (`bom1`), next to the Upstash database.
 
 ## Accessibility (WCAG 2.2 AA)
@@ -120,7 +120,7 @@ flowchart LR
 | Browser | AI client and readers (AI first, then rules), the reducer and saving, and each tab with Testing Library, including focus and announcements | `src/**/*.test.ts(x)` |
 | Journeys | The Change Test, the Gemini path, quotes, a new plan, the keyboard, axe, and no CSP violations under the production headers, on desktop and mobile | `e2e/plan.spec.ts` |
 
-Coverage thresholds are enforced in [`vite.config.ts`](vite.config.ts): 95% overall and 100% of lines for the planning engine. Today: 358 unit and component tests, 99.7% of lines, 98% of branches, plus 14 browser runs. CI runs everything on every push ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
+Coverage thresholds are enforced in [`vite.config.ts`](vite.config.ts): 95% overall and 100% of lines for the planning engine. Today: 363 unit and component tests, 99.7% of lines, 98% of branches, plus 14 browser runs. CI runs everything on every push ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
 
 ## Claims you can check
 
@@ -164,6 +164,8 @@ Settings are server-only (Vercel → Settings → Environment Variables; templat
 - Costs are planning estimates from typical mid-range assumptions, not vendor prices. Your own numbers and quotes replace them.
 - Plans stay in this browser: there are no accounts and no automatic sync. A plan file moves a plan by hand.
 - The built-in rules understand common phrasing only. Anything they cannot read is listed, never guessed.
+- Each budget line books one vendor. You can compare any number of quotes for it, and name each payment when the work is split between two vendors.
+- Change requests move and tick the built-in tasks by name; your own tasks move with the event date and are ticked by hand.
 
 ## Licence
 
