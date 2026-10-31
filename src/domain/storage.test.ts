@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { TODAY, weddingProfile } from '../test/fixtures.js';
 import { addVersion, firstVersion } from './plan.js';
-import { STORAGE_KEY, deserialise, serialise } from './storage.js';
+import { STORAGE_KEY, deserialise, planFileName, serialise } from './storage.js';
 
 const first = firstVersion(weddingProfile(), TODAY);
 const history = addVersion([first], { input: first.input, label: 'More guests', today: TODAY });
@@ -29,5 +29,11 @@ describe('History: saved plans load back exactly, or not at all', () => {
     };
     tampered.versions[0]!.input.profile.guests = -5;
     expect(deserialise(JSON.stringify(tampered))).toEqual({ ok: false, error: 'corrupt' });
+  });
+
+  it('names plan files after the plan, safely', () => {
+    expect(planFileName("Riya & Arjun's wedding")).toBe('bandobast-riya-arjun-s-wedding.json');
+    expect(planFileName('शादी')).toBe('bandobast-plan.json');
+    expect(planFileName(`${'a'.repeat(39)} b`)).toBe(`bandobast-${'a'.repeat(39)}.json`);
   });
 });

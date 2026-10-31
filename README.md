@@ -35,7 +35,9 @@ Upstash Redis
    your own priorities. **Use this option** applies the fix to that same new version, so the change and its fix stay
    one step in History. **Undo this change** restores the old one.
 
-Every version is kept in **History** (the last 30), with what each one changed and a one-click restore.
+Every version is kept in **History** (the last 30), with what each one changed and a one-click restore. To move a
+plan to another device, **save it to a file** and open that file there. An opened file passes the same checks as a
+saved plan, and replacing a plan asks first.
 
 ## What the problem asks, and where it lives
 
@@ -81,7 +83,7 @@ flowchart LR
     State --> Engine[Planning engine<br/>src/domain, pure TS]
     UI --> Client[AI client + readers<br/>src/ai]
     Client -->|AI down or answer rejected| Rules[Built-in rules<br/>src/domain]
-    State <--> LS[(localStorage)]
+    State <--> LS[(localStorage<br/>or a plan file)]
   end
   Client -->|POST /api/ai/:task, same origin| Fn[Vercel Function<br/>api/ai + server]
   Fn --> Limits[(Upstash Redis<br/>rate limits + answer cache)]
@@ -169,7 +171,7 @@ flowchart LR
 | Journeys        | The Change Test, the Gemini path, quotes, a new plan, the keyboard, axe, and no CSP violations under the production headers, on desktop and mobile                  | `e2e/plan.spec.ts`     |
 
 Coverage thresholds are enforced in [`vite.config.ts`](vite.config.ts): 95% overall and 100% of lines for the planning
-engine. Today: 339 unit and component tests, 99.7% of lines, 98% of branches, plus 14 browser runs. CI runs
+engine. Today: 346 unit and component tests, 99.7% of lines, 98% of branches, plus 14 browser runs. CI runs
 everything on every push ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
 
 ## Claims you can check
@@ -214,7 +216,7 @@ Without the first two, the function answers 503 and the app uses its rules.
 
 - Costs are planning estimates from typical mid-range assumptions, not vendor prices. Your own numbers and quotes
   replace them.
-- Plans stay in this browser: there are no accounts and no sync across devices.
+- Plans stay in this browser: there are no accounts and no automatic sync. A plan file moves a plan by hand.
 - The built-in rules understand common phrasing only. Anything they cannot read is listed, never guessed.
 
 ## Licence

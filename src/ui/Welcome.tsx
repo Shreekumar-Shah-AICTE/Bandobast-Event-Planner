@@ -1,11 +1,14 @@
-/** First screen: what Bandobast does, and two ways to start. */
+/** First screen: what Bandobast does, and the ways to start. */
+import type { Persisted } from '../domain/storage.js';
+import { OpenPlanFile } from './common/PlanFile.js';
 
 interface WelcomeProps {
   readonly onStart: () => void;
   readonly onSample: () => void;
+  readonly onOpen: (saved: Persisted) => void;
 }
 
-export function Welcome({ onStart, onSample }: WelcomeProps) {
+export function Welcome({ onStart, onSample, onOpen }: WelcomeProps) {
   return (
     <section className="welcome" aria-labelledby="welcome-title">
       <h1 id="welcome-title" tabIndex={-1}>
@@ -23,6 +26,10 @@ export function Welcome({ onStart, onSample }: WelcomeProps) {
         <button type="button" onClick={onSample}>
           Try the sample: Riya &amp; Arjun&apos;s wedding, Pune
         </button>
+      </div>
+      <p className="hint">Saved a plan on another device? Open its file here.</p>
+      <div className="actions">
+        <OpenPlanFile onOpen={onOpen} />
       </div>
       <ul className="feature-list">
         <li>

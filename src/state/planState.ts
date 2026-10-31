@@ -5,6 +5,7 @@
 import type { Change, EventProfile, PlanInput, PlanVersion } from '../../shared/schemas.js';
 import type { IsoDate } from '../domain/dates.js';
 import { addVersion, firstVersion } from '../domain/plan.js';
+import type { Persisted } from '../domain/storage.js';
 
 export interface PlanState {
   readonly versions: readonly PlanVersion[];
@@ -31,6 +32,8 @@ export type PlanAction =
   | { readonly type: 'edit'; readonly input: PlanInput }
   | { readonly type: 'restore'; readonly version: number; readonly today: IsoDate }
   | { readonly type: 'dismissReport' }
+  /** Replaces everything with a plan file that passed the same checks as a saved plan. */
+  | { readonly type: 'load'; readonly saved: Persisted }
   | { readonly type: 'reset' };
 
 /** The version on screen, or null before the first plan. O(v). */
@@ -78,6 +81,8 @@ export function planReducer(state: PlanState, action: PlanAction): PlanState {
       return restore(state, action);
     case 'dismissReport':
       return { ...state, report: null };
+    case 'load':
+      return { versions: action.saved.versions, current: action.saved.current, report: null };
     case 'reset':
       return EMPTY_STATE;
   }

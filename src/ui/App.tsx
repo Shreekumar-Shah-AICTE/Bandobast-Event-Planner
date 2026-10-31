@@ -1,11 +1,11 @@
 /** The whole app: welcome, the intake form, or the plan dashboard. */
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useScreenFocus } from './common/hooks.js';
 import type { EventProfile } from '../../shared/schemas.js';
 import type { IsoDate } from '../domain/dates.js';
 import { sampleProfile } from '../sample.js';
 import type { Loaded } from '../state/persistence.js';
-import { currentVersion } from '../state/planState.js';
+import { currentVersion, type PlanAction } from '../state/planState.js';
 import { usePlan } from '../state/usePlan.js';
 import { Footer } from './common/Footer.js';
 import { Dashboard } from './dashboard/Dashboard.js';
@@ -31,15 +31,26 @@ interface ScreenProps {
 
 function Screen({ store, today }: ScreenProps) {
   const [intake, setIntake] = useState(false);
-  const { state, dispatch } = store;
+  // Counts opened plan files: an opened plan starts fresh, with focus on its title.
+  const [opened, setOpened] = useState(0);
+  const { state, dispatch: send } = store;
+  const dispatch = useCallback(
+    (action: PlanAction) => {
+      if (action.type === 'load') setOpened((count) => count + 1);
+      send(action);
+    },
+    [send],
+  );
   const version = currentVersion(state);
-  useScreenFocus(version !== null ? 'plan' : intake ? 'intake' : 'welcome');
+  useScreenFocus(version !== null ? `plan-${String(opened)}` : intake ? 'intake' : 'welcome');
   const start = (profile: EventProfile) => {
     dispatch({ type: 'start', profile, today });
     setIntake(false);
   };
   if (version !== null) {
-    return <Dashboard state={state} version={version} dispatch={dispatch} today={today} />;
+    return (
+      <Dashboard key={opened} state={state} version={version} dispatch={dispatch} today={today} />
+    );
   }
   if (intake) {
     return (
@@ -59,6 +70,9 @@ function Screen({ store, today }: ScreenProps) {
       }}
       onSample={() => {
         start(sampleProfile(today));
+      }}
+      onOpen={(saved) => {
+        dispatch({ type: 'load', saved });
       }}
     />
   );

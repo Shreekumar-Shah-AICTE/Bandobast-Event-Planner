@@ -87,7 +87,7 @@ describe('planReducer', () => {
     expect(planReducer(state, { type: 'restore', version: 9, today: TODAY })).toBe(state);
   });
 
-  it('dismisses the report and resets to empty', () => {
+  it('dismisses the report, resets to empty, and loads a plan file', () => {
     const reported = planReducer(start(), {
       type: 'commit',
       input: withGuests(start(), 250),
@@ -99,5 +99,7 @@ describe('planReducer', () => {
     const reset = planReducer(reported, { type: 'reset' });
     expect(reset).toEqual(EMPTY_STATE);
     expect(currentVersion(reset)).toBeNull();
+    const saved = { schemaVersion: 1 as const, versions: [...start().versions], current: 1 };
+    expect(planReducer(reported, { type: 'load', saved })).toEqual({ ...start(), report: null });
   });
 });

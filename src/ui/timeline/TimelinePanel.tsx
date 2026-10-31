@@ -3,6 +3,7 @@ import { buildIcs, calendarUrl, taskCalendarEntry } from '../../domain/calendar.
 import { formatDate, type IsoDate } from '../../domain/dates.js';
 import type { Plan } from '../../domain/plan.js';
 import type { ScheduledTask } from '../../domain/timeline.js';
+import { downloadText } from '../common/download.js';
 import { plural } from '../common/format.js';
 import { TaskStatusBadge } from '../common/Labels.js';
 import type { PlanControls } from '../dashboard/controls.js';
@@ -19,14 +20,7 @@ export function slackText(task: ScheduledTask): string {
 export function downloadIcs(plan: Plan, today: IsoDate): void {
   const { title, eventDate } = plan.input.profile;
   const text = buildIcs({ title, eventDate, tasks: plan.schedule.tasks, today });
-  const url = URL.createObjectURL(new Blob([text], { type: 'text/calendar' }));
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = 'bandobast-plan.ics';
-  link.click();
-  setTimeout(() => {
-    URL.revokeObjectURL(url);
-  }, 0);
+  downloadText(text, 'bandobast-plan.ics', 'text/calendar');
 }
 
 export function TimelinePanel({ controls }: { readonly controls: PlanControls }) {

@@ -1,4 +1,4 @@
-/** History tab: every saved version, what each changed, restore, and start over. */
+/** History tab: every saved version, what each changed, restore, plan files, and start over. */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { LIMITS } from '../../../shared/limits.js';
 import type { PlanVersion } from '../../../shared/schemas.js';
@@ -7,6 +7,7 @@ import { diffPlans } from '../../domain/diff.js';
 import { buildPlan } from '../../domain/plan.js';
 import type { PlanAction, PlanState } from '../../state/planState.js';
 import { useFocusOnMount } from '../common/hooks.js';
+import { PlanFiles } from '../common/PlanFile.js';
 import { LineChanges, ProfileChanges } from '../dashboard/ImpactParts.js';
 
 interface HistoryProps {
@@ -35,6 +36,12 @@ export function HistoryPanel({ state, today, dispatch }: HistoryProps) {
           />
         ))}
       </ol>
+      <PlanFiles
+        state={state}
+        onLoad={(saved) => {
+          dispatch({ type: 'load', saved });
+        }}
+      />
       <StartOver
         onReset={() => {
           dispatch({ type: 'reset' });

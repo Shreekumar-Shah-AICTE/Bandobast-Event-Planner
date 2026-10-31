@@ -1,6 +1,7 @@
 /**
- * Persisted state: plan versions in localStorage, validated with zod on every
- * load. Unknown or newer schema versions are rejected instead of guessed at.
+ * Persisted state: plan versions in localStorage or in a plan file, validated
+ * with zod on every load. Unknown or newer schema versions are rejected instead
+ * of guessed at.
  */
 import { z } from 'zod';
 import { LIMITS } from '../../shared/limits.js';
@@ -45,4 +46,20 @@ export function deserialise(raw: string | null): Result<Persisted, LoadError> {
   if (!parsed.success) return err('corrupt');
   const exists = parsed.data.versions.some((entry) => entry.version === parsed.data.current);
   return exists ? ok(parsed.data) : err('corrupt');
+}
+
+/** Largest plan file accepted; a full history of the largest plan is far smaller. */
+export const MAX_PLAN_FILE_BYTES = 2_000_000;
+
+const MAX_SLUG = 40;
+
+/** "bandobast-riya-arjun-s-wedding.json"; titles with no Latin letters give "bandobast-plan.json". O(n). */
+export function planFileName(title: string): string {
+  const slug = title
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[^a-z0-9]+/gu, '-')
+    .slice(0, MAX_SLUG)
+    .replace(/^-+|-+$/gu, '');
+  return `bandobast-${slug === '' ? 'plan' : slug}.json`;
 }

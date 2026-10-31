@@ -437,6 +437,16 @@ textarea {
   padding-left: 0;
 }
 
+.file-button {
+  display: inline-flex;
+  align-items: center;
+}
+
+.file-button:focus-within {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
 .change-choice {
   display: flex;
   gap: 0.5rem;

@@ -44,7 +44,8 @@ gets an answer or a fallback. The numbers live in `shared/timing.ts`, and a test
 
 There are no accounts and no server database, so there are no personal data to breach. Saves are validated on load,
 an unreadable save is set aside rather than overwritten, and if `localStorage` is blocked the app says so and keeps
-the plan in memory. **Cost:** there is no sync across devices.
+the plan in memory. **Cost:** there is no automatic sync across devices; a plan file (save, then open on the other
+device) moves a plan by hand and passes the same checks as a save.
 
 ## 8. A small dependency set
 
