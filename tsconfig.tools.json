@@ -1,0 +1,11 @@
+{
+  "//": "Build and test tooling: Vite/Vitest/Playwright configs and end-to-end specs.",
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "types": ["node"]
+  },
+  "include": ["vite.config.ts", "playwright.config.ts", "e2e"]
+}

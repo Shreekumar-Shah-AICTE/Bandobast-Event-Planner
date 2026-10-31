@@ -1,0 +1,12 @@
+{
+  "//": "Browser side: React UI, state and the AI client. The domain engine is checked again here.",
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "types": ["vite/client"]
+  },
+  "include": ["src", "shared"]
+}

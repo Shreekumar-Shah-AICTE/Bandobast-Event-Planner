@@ -1,0 +1,10 @@
+{
+  "//": "Server side: Vercel functions, shared contracts and the pure domain engine (Node ESM, explicit .js imports).",
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "types": ["node"]
+  },
+  "include": ["api", "shared", "src/domain"]
+}
