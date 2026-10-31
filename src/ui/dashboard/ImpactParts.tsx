@@ -11,6 +11,10 @@ interface ReportProps {
   readonly report: ImpactReport;
 }
 
+/** "₹96,000 → ₹1,04,000", or "₹96,000 (unchanged)". O(1). */
+export const fromTo = (before: string, after: string): string =>
+  before === after ? `${after} (unchanged)` : `${before} → ${after}`;
+
 export function ProfileChanges({ report }: ReportProps) {
   const { guests, budget, eventDate, feasibility, contingency } = report;
   return (
@@ -23,10 +27,19 @@ export function ProfileChanges({ report }: ReportProps) {
         <li>{`Event date: ${formatDate(eventDate.before)} → ${formatDate(eventDate.after)}`}</li>
       )}
       <li>
-        Budget check: <FeasibilityBadge feasibility={feasibility.before} /> →{' '}
-        <FeasibilityBadge feasibility={feasibility.after} />
+        Budget check:{' '}
+        {feasibility.before === feasibility.after ? (
+          <>
+            <FeasibilityBadge feasibility={feasibility.after} /> (unchanged)
+          </>
+        ) : (
+          <>
+            <FeasibilityBadge feasibility={feasibility.before} /> →{' '}
+            <FeasibilityBadge feasibility={feasibility.after} />
+          </>
+        )}
       </li>
-      <li>{`Reserve for surprises: ${formatInr(contingency.before)} → ${formatInr(contingency.after)}`}</li>
+      <li>{`Reserve for surprises: ${fromTo(formatInr(contingency.before), formatInr(contingency.after))}`}</li>
       {report.movedTasks > 0 && (
         <li>{`${plural(report.movedTasks, 'task')} moved to new dates`}</li>
       )}

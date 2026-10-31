@@ -106,7 +106,10 @@ function IdeaCard({ idea }: { readonly idea: Idea }) {
         {CATEGORIES[idea.category].label} · <span aria-hidden="true">{cost.signs}</span>
         <span className="visually-hidden">{cost.words}</span>
         {idea.source === 'ai' && (
-          <span className="badge badge-source-ai"> From Gemini, checked</span>
+          <>
+            {' '}
+            <span className="badge badge-source-ai">From Gemini, checked</span>
+          </>
         )}
       </p>
     </li>

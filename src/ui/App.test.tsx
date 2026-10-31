@@ -1,5 +1,5 @@
 import { screen, waitFor, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { STORAGE_KEY } from '../domain/storage.js';
 import { rupees } from '../domain/money.js';
 import { memoryStorage } from '../state/browserStorage.js';
@@ -151,6 +151,22 @@ describe('App', () => {
     const { user } = renderApp(blocked);
     await user.click(screen.getByRole('button', { name: /Try the sample/ }));
     expect(await screen.findByRole('alert')).toHaveTextContent('did not let Bandobast save');
+  });
+
+  it('saves at once when the tab is hidden', async () => {
+    const { user } = renderPlan(weddingProfile());
+    await user.click(screen.getByRole('tab', { name: 'Vendors' }));
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: 'Status of Caterer' }),
+      'contacted',
+    );
+    const visibility = vi.spyOn(document, 'visibilityState', 'get');
+    visibility.mockReturnValue('visible');
+    document.dispatchEvent(new Event('visibilitychange'));
+    expect(window.localStorage.getItem(STORAGE_KEY)).not.toContain('"catering":"contacted"');
+    visibility.mockReturnValue('hidden');
+    document.dispatchEvent(new Event('visibilitychange'));
+    expect(window.localStorage.getItem(STORAGE_KEY)).toContain('"catering":"contacted"');
   });
 
   it('warns at once when saving is blocked for the whole session', () => {

@@ -29,6 +29,7 @@ export default defineConfig({
           environment: 'node',
           include: [
             'src/domain/**/*.test.ts',
+            'src/*.test.ts',
             'server/**/*.test.ts',
             'shared/**/*.test.ts',
             'api/**/*.test.ts',
@@ -40,7 +41,12 @@ export default defineConfig({
         test: {
           name: 'dom',
           environment: 'jsdom',
-          include: ['src/**/*.test.tsx', 'src/ai/**/*.test.ts', 'src/state/**/*.test.ts'],
+          include: [
+            'src/**/*.test.tsx',
+            'src/ai/**/*.test.ts',
+            'src/state/**/*.test.ts',
+            'src/ui/**/*.test.ts',
+          ],
           setupFiles: ['src/test/setup.ts'],
         },
       },

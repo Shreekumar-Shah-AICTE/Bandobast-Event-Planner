@@ -1,7 +1,7 @@
 /** Renders the whole app with a saved plan, the way a returning user would see it. */
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { EventProfile, PlanInput } from '../../shared/schemas.js';
+import type { EventProfile, PlanInput, PlanVersion } from '../../shared/schemas.js';
 import { firstVersion } from '../domain/plan.js';
 import { serialise, STORAGE_KEY } from '../domain/storage.js';
 import { App } from '../ui/App.js';
@@ -10,6 +10,12 @@ import { TODAY, weddingProfile } from './fixtures.js';
 export function renderApp(storage: Storage = window.localStorage, persistent = true) {
   const user = userEvent.setup();
   return { user, ...render(<App storage={storage} today={TODAY} persistent={persistent} />) };
+}
+
+/** Renders the app with several saved versions; `current` is the one on screen. */
+export function renderVersions(versions: readonly PlanVersion[], current: number) {
+  window.localStorage.setItem(STORAGE_KEY, serialise(versions, current));
+  return renderApp();
 }
 
 export function renderPlan(

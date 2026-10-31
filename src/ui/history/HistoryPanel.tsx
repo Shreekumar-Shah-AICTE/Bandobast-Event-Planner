@@ -1,5 +1,5 @@
 /** History tab: every saved version, what each changed, restore, and start over. */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { LIMITS } from '../../../shared/limits.js';
 import type { PlanVersion } from '../../../shared/schemas.js';
 import { formatDate, type IsoDate } from '../../domain/dates.js';
@@ -59,7 +59,12 @@ function VersionItem({ entry, previous, current, today, onRestore }: VersionItem
       <p>
         <strong>{`Version ${String(entry.version)}`}</strong>
         {` · ${formatDate(entry.createdOn)} · ${entry.label}`}
-        {current && <span className="badge"> On screen</span>}
+        {current && (
+          <>
+            {' '}
+            <span className="badge">On screen</span>
+          </>
+        )}
       </p>
       <div className="actions">
         {previous !== undefined && (
@@ -109,9 +114,17 @@ function VersionDiff({ before, after, today }: VersionDiffProps) {
 
 function StartOver({ onReset }: { readonly onReset: () => void }) {
   const [asking, setAsking] = useState(false);
+  const start = useRef<HTMLButtonElement>(null);
+  const returning = useRef(false);
+  useEffect(() => {
+    if (asking || !returning.current) return;
+    returning.current = false;
+    start.current?.focus();
+  }, [asking]);
   if (!asking) {
     return (
       <button
+        ref={start}
         type="button"
         className="danger"
         onClick={() => {
@@ -126,6 +139,7 @@ function StartOver({ onReset }: { readonly onReset: () => void }) {
     <ConfirmReset
       onReset={onReset}
       onKeep={() => {
+        returning.current = true;
         setAsking(false);
       }}
     />

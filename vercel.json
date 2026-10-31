@@ -4,6 +4,7 @@
   "installCommand": "npm ci",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "regions": ["bom1"],
   "functions": {
     "api/ai/[task].ts": { "maxDuration": 25 }
   },

@@ -81,7 +81,9 @@ function StatusSelect({ card, onChange }: StatusSelectProps) {
   const id = `status-${card.category}`;
   return (
     <>
-      <label htmlFor={id}>{`Status`}</label>
+      <label htmlFor={id}>
+        Status <span className="visually-hidden">of {card.vendor}</span>
+      </label>
       <select
         id={id}
         value={card.status}

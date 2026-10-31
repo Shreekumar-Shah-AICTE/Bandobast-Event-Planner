@@ -1,5 +1,5 @@
 /** Paste a quote → Gemini (or the rules) itemises it → review the checked result → save. */
-import { useState, type SyntheticEvent } from 'react';
+import { useRef, useState, type RefObject, type SyntheticEvent } from 'react';
 import { LIMITS } from '../../../shared/limits.js';
 import type { CategoryId, QuoteDraft } from '../../../shared/schemas.js';
 import { readQuote, type Reading } from '../../ai/readers.js';
@@ -22,39 +22,59 @@ export function QuoteReader({ controls }: { readonly controls: PlanControls }) {
   const fallback: CategoryId = categories.includes('catering') ? 'catering' : at(categories, 0);
   const [category, setCategory] = useState<CategoryId>(fallback);
   const [text, setText] = useState('');
+  const [saved, setSaved] = useState<string | null>(null);
+  const textBox = useRef<HTMLTextAreaElement>(null);
   const ask = useAsk<QuoteReading>();
   const full = plan.input.quotes.length >= LIMITS.maxQuotes;
   const read = async (event: SyntheticEvent) => {
     event.preventDefault();
+    setSaved(null);
     await ask.run((signal) => readQuote(text, category, signal));
+  };
+  const close = () => {
+    ask.clear();
+    textBox.current?.focus();
   };
   const save = (reading: QuoteReading) => {
     const input = addQuote(plan.input, reading.value, { text: reading.text, today });
     controls.commit(input, `Added quote: ${reading.value.vendorName}`);
-    ask.clear();
     setText('');
+    setSaved(reading.value.vendorName);
+    close();
   };
   return (
     <section className="panel" aria-labelledby="quote-reader-title">
       <h3 id="quote-reader-title">Check a quote</h3>
       <form onSubmit={(event) => void read(event)}>
         <CategorySelect categories={categories} value={category} onChange={setCategory} />
-        <QuoteText text={text} onText={setText} />
+        <QuoteText text={text} onText={setText} box={textBox} />
         <ReadButton busy={ask.busy} full={full} empty={text.trim() === ''} />
       </form>
-      <p role="status" className="visually-hidden">
-        {ask.busy ? 'Reading the quote…' : ''}
-      </p>
+      <ReaderStatus busy={ask.busy} saved={saved} />
       {ask.result !== null && (
         <QuoteReview
           result={ask.result}
           guests={plan.input.profile.guests}
           today={today}
           onSave={save}
-          onDiscard={ask.clear}
+          onDiscard={close}
         />
       )}
     </section>
+  );
+}
+
+/** Announces reading and saving; present from the start so screen readers hear changes. */
+function ReaderStatus({ busy, saved }: { readonly busy: boolean; readonly saved: string | null }) {
+  const message = busy
+    ? 'Reading the quote…'
+    : saved === null
+      ? ''
+      : `Saved the quote from ${saved}. It is listed below.`;
+  return (
+    <p role="status" className="hint">
+      {message}
+    </p>
   );
 }
 
@@ -106,13 +126,13 @@ function CategorySelect({ categories, value, onChange }: CategorySelectProps) {
   );
 }
 
-function QuoteText({
-  text,
-  onText,
-}: {
+interface QuoteTextProps {
   readonly text: string;
   readonly onText: (text: string) => void;
-}) {
+  readonly box: RefObject<HTMLTextAreaElement | null>;
+}
+
+function QuoteText({ text, onText, box }: QuoteTextProps) {
   return (
     <>
       <label htmlFor="quote-text">Paste the quote</label>
@@ -121,6 +141,7 @@ function QuoteText({
         anything is sent to the AI.
       </p>
       <textarea
+        ref={box}
         id="quote-text"
         rows={6}
         maxLength={LIMITS.maxQuoteTextLength}

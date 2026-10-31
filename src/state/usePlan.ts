@@ -3,7 +3,7 @@ import { useEffect, useReducer, useState } from 'react';
 import { loadPlan, savePlan, type Loaded } from './persistence.js';
 import { planReducer, type PlanAction, type PlanState } from './planState.js';
 
-/** Saves wait this long after the last change, so typing does not write on every key. */
+/** Saves wait this long after the last change, so quick edits write once. */
 export const SAVE_DELAY_MS = 300;
 
 export interface PlanStore {
@@ -19,11 +19,20 @@ export function usePlan(storage: Storage): PlanStore {
   const [state, dispatch] = useReducer(planReducer, loaded.state);
   const [saved, setSaved] = useState(true);
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const save = () => {
       setSaved(savePlan(storage, state));
-    }, SAVE_DELAY_MS);
+    };
+    // Closing or hiding the tab saves at once, so the last change is never lost.
+    const onHide = () => {
+      if (document.visibilityState === 'hidden') save();
+    };
+    const timer = setTimeout(save, SAVE_DELAY_MS);
+    window.addEventListener('pagehide', save);
+    document.addEventListener('visibilitychange', onHide);
     return () => {
       clearTimeout(timer);
+      window.removeEventListener('pagehide', save);
+      document.removeEventListener('visibilitychange', onHide);
     };
   }, [storage, state]);
   return { state, dispatch, problem: loaded.problem, saved };
