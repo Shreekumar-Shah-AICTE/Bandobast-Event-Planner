@@ -1,6 +1,6 @@
 /**
- * Prompts. User text is fenced and declared to be data; the response schema,
- * low temperature and the code checks in tasks.ts do the rest.
+ * Prompts. User text is fenced and declared to be data; the response schema
+ * and the code checks in tasks.ts do the rest.
  */
 import type { AiInput } from '../shared/aiContracts.js';
 import { CATEGORY_IDS } from '../shared/schemas.js';

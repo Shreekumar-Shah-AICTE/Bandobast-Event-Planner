@@ -19,7 +19,7 @@ export interface ModelRequest {
 /** Calls one model and returns its raw text. */
 export type ModelCall = (model: string, request: ModelRequest) => Promise<string>;
 
-/** The real Gemini caller (low temperature, low thinking, JSON only). */
+/** The real Gemini caller (default temperature, low thinking, JSON only). */
 export function geminiCaller(apiKey: string): ModelCall {
   const ai = new GoogleGenAI({ apiKey });
   return async (model, request) => {

@@ -6,8 +6,11 @@ export const SERVER_CONFIG = {
   maxBodyBytes: 16 * 1024,
   /** At most this many models are tried per request. */
   maxModelAttempts: 2,
-  /** Low temperature: extraction and short ideas, not creative writing. */
-  temperature: 0.2,
+  /**
+   * The Gemini 3 default. Google advises against lowering it for Gemini 3 models (it can cause
+   * looping); steadiness comes from the JSON schema, low thinking and the code checks instead.
+   */
+  temperature: 1,
   /**
    * Output token caps per task (they include the model's low-level thinking).
    * They bound latency and cost; a typical answer uses a fraction of them.

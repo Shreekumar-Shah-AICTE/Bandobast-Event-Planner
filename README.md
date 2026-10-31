@@ -62,7 +62,8 @@ side-by-side comparison by worst-case total. A price that is not written in your
 | `explain` | Rebalance options → a short comparison                                | The model may only write `{{placeholders}}`. Code fills in every number, and text with digits is rejected.                      | Template sentence                       |
 
 - **Models:** `gemini-3.8-flash`, then `gemini-3.5-flash-lite` if the first fails, through `@google/genai` with
-  JSON-schema structured output and temperature 0.2.
+  JSON-schema structured output, low thinking and temperature 1 (the Gemini 3 default, which Google advises
+  keeping).
 - **Prompting:** user text is fenced and labelled as data, never as instructions. Each task has its own system
   instruction ([`server/prompts.ts`](server/prompts.ts)) and an output token cap
   ([`server/config.ts`](server/config.ts)).
@@ -134,8 +135,8 @@ flowchart LR
 - **One time budget per AI request:** the server answers within 20 s, the browser waits 23 s, and Vercel stops the
   function at 25 s. A single model call gets at most 9 s, so two models fit. A test checks these numbers against
   each other and against `vercel.json` ([`server/timing.test.ts`](server/timing.test.ts)).
-- **Less work per answer:** a 24-hour answer cache, output token caps per task, a low temperature, and requests from
-  a screen you have left are cancelled.
+- **Less work per answer:** a 24-hour answer cache, output token caps per task, low thinking, and requests from a
+  screen you have left are cancelled.
 - **Small, cacheable bundle:** about 131 kB of gzipped JavaScript in three chunks (app, React, zod), no UI framework,
   and hashed assets cached for a year. Saves are debounced, and flushed when the tab is hidden.
 - **Close to the users:** the function runs in Mumbai (`bom1`), next to the Upstash database.

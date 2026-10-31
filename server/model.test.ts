@@ -19,7 +19,7 @@ vi.mock('@google/genai', () => ({
 const REQUEST = { system: 'sys', prompt: 'hello', schema: { type: 'object' }, maxOutputTokens: 99 };
 
 describe('geminiCaller', () => {
-  it('asks for JSON with the schema, low temperature, low thinking and a timeout signal', async () => {
+  it('asks for JSON with the schema, the default temperature, low thinking and a timeout signal', async () => {
     const signal = AbortSignal.timeout(1_000);
     const call = geminiCaller('key');
     expect(await call('gemini-test', { ...REQUEST, signal })).toBe('{"a":1}');
@@ -30,7 +30,7 @@ describe('geminiCaller', () => {
         systemInstruction: 'sys',
         responseMimeType: 'application/json',
         responseJsonSchema: { type: 'object' },
-        temperature: 0.2,
+        temperature: 1,
         maxOutputTokens: 99,
         thinkingConfig: { thinkingLevel: 'LOW' },
         abortSignal: signal,
