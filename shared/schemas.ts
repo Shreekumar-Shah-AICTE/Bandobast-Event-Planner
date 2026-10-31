@@ -123,7 +123,7 @@ export const PaymentSchema = z.object({
  * so it moves with the event date like the built-in tasks. Ids never clash with theirs.
  */
 export const CustomTaskSchema = z.object({
-  id: z.string().regex(/^my\d{1,3}$/u),
+  id: z.string().regex(/^my\d{1,9}$/u),
   title: z.string().trim().min(1).max(LIMITS.maxTitleLength),
   daysBefore: z.int().min(-LIMITS.maxDaysAfterEvent).max(LIMITS.maxDaysBeforeEvent),
 });

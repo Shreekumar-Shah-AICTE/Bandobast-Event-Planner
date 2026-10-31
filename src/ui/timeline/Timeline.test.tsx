@@ -19,6 +19,7 @@ describe('timeline tab', () => {
     const { user } = renderPlan();
     await user.click(screen.getByRole('tab', { name: /Timeline/ }));
     const form = screen.getByRole('form', { name: 'Add your own task' });
+    expect(within(form).getByLabelText('Due on')).toHaveAttribute('max', '2027-04-19');
     await user.click(within(form).getByRole('button', { name: 'Add task' }));
     expect(within(form).getByRole('alert')).toHaveTextContent(/Name the task/);
     await user.type(within(form).getByLabelText('Your task'), 'Book the mehendi artist');

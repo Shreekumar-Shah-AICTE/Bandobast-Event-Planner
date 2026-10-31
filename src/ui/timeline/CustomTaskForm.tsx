@@ -2,6 +2,7 @@
 import { useState, type Ref, type SyntheticEvent } from 'react';
 import { LIMITS } from '../../../shared/limits.js';
 import { addCustomTask } from '../../domain/customTasks.js';
+import { addDays } from '../../domain/dates.js';
 import type { PlanControls } from '../dashboard/controls.js';
 
 export function CustomTaskForm({
@@ -40,6 +41,7 @@ export function CustomTaskForm({
         id="custom-task-due"
         type="date"
         min={controls.today}
+        max={addDays(controls.plan.input.profile.eventDate, LIMITS.maxDaysAfterEvent)}
         value={draft.dueOn}
         onChange={(event) => {
           setDraft({ ...draft, dueOn: event.target.value });

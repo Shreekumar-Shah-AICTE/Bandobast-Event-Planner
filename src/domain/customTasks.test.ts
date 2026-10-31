@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { LIMITS } from '../../shared/limits.js';
-import type { PlanInput } from '../../shared/schemas.js';
+import { CustomTaskSchema, type PlanInput } from '../../shared/schemas.js';
 import { TODAY, weddingProfile } from '../test/fixtures.js';
 import { addCustomTask, removeCustomTask } from './customTasks.js';
 import { addDays } from './dates.js';
@@ -57,6 +57,9 @@ describe('custom tasks', () => {
     const two = added('Second', '2027-01-12', added('First', '2027-01-11'));
     const third = added('Third', '2027-01-13', removeCustomTask(two, 'my1'));
     expect(third.customTasks.map((task) => task.id)).toEqual(['my2', 'my3']);
+    expect(
+      CustomTaskSchema.safeParse({ id: 'my1000', title: 'Task', daysBefore: 10 }).success,
+    ).toBe(true);
     const full = {
       ...base(),
       customTasks: Array.from({ length: LIMITS.maxCustomTasks }, (_, index) => ({
