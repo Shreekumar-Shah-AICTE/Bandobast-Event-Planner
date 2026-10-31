@@ -20,4 +20,4 @@ Please report it privately with **Report a vulnerability** on this repository's 
 
 ## Out of scope
 
-There are no accounts, no server-side storage of plans and no payments. A plan lives in the user's own browser (`localStorage`), so whoever uses that browser profile can see it.
+There are no accounts, no server-side storage of plans and no payment processing: vendor payments are notes the user types in. A plan lives in the user's own browser (`localStorage`), so whoever uses that browser profile can see it.

@@ -4,7 +4,7 @@ Short records of the choices that shape the code. Each one says what was decided
 
 ## 1. One pure function makes the plan
 
-`buildPlan(input, today)` derives the budget, scenarios, schedule, vendor cards and quote analyses from the user's inputs. Only inputs are stored, so a version is just its inputs, and undo, restore and the impact report are exact. **Cost:** the plan is rebuilt on every change. That takes well under a millisecond for this data, and the result is memoised.
+`buildPlan(input, today)` derives the budget, scenarios, schedule, vendor cards, quote analyses and payment totals from the user's inputs. Only inputs are stored, so a version is just its inputs, and undo, restore and the impact report are exact. **Cost:** the plan is rebuilt on every change. That takes well under a millisecond for this data, and the result is memoised.
 
 ## 2. Code calculates, Gemini reads and writes
 

@@ -70,7 +70,7 @@ flowchart LR
   Shared -.-> Fn
 ```
 
-- **One pure function makes the plan.** `buildPlan(input, today)` turns your inputs (profile, fixed amounts, task states, vendor statuses, quotes) into the budget, scenarios, schedule, vendor cards and quote analyses. Nothing that can be derived is stored. A version is just its inputs, so the diff between two versions is exact.
+- **One pure function makes the plan.** `buildPlan(input, today)` turns your inputs (profile, fixed amounts, task states, your own tasks, vendor statuses, quotes, payments) into the budget, scenarios, schedule, vendor cards, quote analyses and payment totals. Nothing that can be derived is stored. A version is just its inputs, so the diff between two versions is exact.
 - **Money is integer paise** and dates are UTC day numbers, so there are no float or time-zone errors. Indian notation like `1.2 lakh`, `85k` or `₹2 crore` is parsed in [`money.ts`](src/domain/money.ts).
 - **Contracts are shared.** The browser and the function validate the same zod schemas in [`shared/`](shared). Stored plans are validated on every load, and newer formats are set aside, not guessed at.
 - **Expected failures are values, not exceptions** ([`result.ts`](src/domain/result.ts)). The AI function never throws to the client. Each error says whether the browser should fall back to its rules.
