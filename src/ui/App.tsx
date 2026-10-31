@@ -101,6 +101,31 @@ function Notices({ problem, saved }: NoticesProps) {
   );
 }
 
+const PETALS = 8;
+const FULL_TURN = 360;
+
+/** The brand mark: a marigold, drawn so it needs no symbol font. */
+function Marigold() {
+  return (
+    <svg className="brand-mark" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+      {Array.from({ length: PETALS }, (_, petal) => {
+        const angle = String((petal * FULL_TURN) / PETALS);
+        return (
+          <ellipse
+            key={angle}
+            cx="10"
+            cy="4.5"
+            rx="2.6"
+            ry="4"
+            transform={`rotate(${angle} 10 10)`}
+          />
+        );
+      })}
+      <circle cx="10" cy="10" r="3.2" className="brand-mark-heart" />
+    </svg>
+  );
+}
+
 export function App({ storage, today, persistent = true }: AppProps) {
   const store = usePlan(storage);
   return (
@@ -110,10 +135,7 @@ export function App({ storage, today, persistent = true }: AppProps) {
       </a>
       <header className="site-header">
         <p className="brand">
-          <span className="brand-mark" aria-hidden="true">
-            ✦
-          </span>{' '}
-          Bandobast
+          <Marigold /> Bandobast
         </p>
         <p className="tagline">Celebration planning that keeps up with change</p>
       </header>

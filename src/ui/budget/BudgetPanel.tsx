@@ -4,6 +4,7 @@ import { plural } from '../common/format.js';
 import { FeasibilityBadge } from '../common/Labels.js';
 import type { PlanControls } from '../dashboard/controls.js';
 import { gapText } from '../dashboard/PlanHeader.js';
+import { BudgetBar } from './BudgetBar.js';
 import { BudgetTable } from './BudgetTable.js';
 import { Scenarios } from './Scenarios.js';
 
@@ -33,6 +34,7 @@ export function BudgetPanel({ controls }: { readonly controls: PlanControls }) {
           </dd>
         </div>
       </dl>
+      <BudgetBar budget={budget} />
       <p className="hint">
         {`Typical costs are mid-range assumptions for ${plural(plan.input.profile.guests, 'guest')}, not quotes. Replace them with your own number or a checked quote.`}
       </p>

@@ -3,6 +3,7 @@ import { CATEGORIES } from '../../domain/catalog.js';
 import { formatDate } from '../../domain/dates.js';
 import { formatCompact, formatInr } from '../../domain/money.js';
 import type { Plan } from '../../domain/plan.js';
+import { BudgetBar } from '../budget/BudgetBar.js';
 import { listText } from '../common/format.js';
 import { paymentTotals } from '../vendors/Payments.js';
 import { TaskStatusBadge } from '../common/Labels.js';
@@ -112,6 +113,7 @@ export function Overview({
             onGo('budget');
           }}
         >
+          <BudgetBar budget={plan.budget} legend={false} />
           <p>{`Biggest lines: ${biggest(plan)}.`}</p>
           <p>{`Reserve for surprises: ${formatInr(plan.budget.contingency)}.`}</p>
         </Card>

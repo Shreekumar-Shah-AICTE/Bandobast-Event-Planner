@@ -1,13 +1,20 @@
-/* Bandobast — warm, readable, high-contrast. Every colour pair meets WCAG AA. */
+/* Bandobast — festive and readable: maroon and marigold, a toran under the header.
+   Every text colour pair meets WCAG AA; motion is transform-only and off on request. */
 :root {
   --ink: #1f1a17;
   --ink-soft: #4a403a;
   --paper: #fffaf3;
   --card: #ffffff;
-  --line: #d9cbbb;
+  --line: #e6d6c4;
   --brand: #7a1f3d;
   --brand-dark: #5c1530;
   --accent: #f2a900;
+  --saffron: #e8730c;
+  --cream: #ffe9c2;
+  --hero: linear-gradient(135deg, #4f1129, #7a1f3d 55%, #9b2c50);
+  --rays: repeating-conic-gradient(from 0deg at 92% 12%, #ffffff0d 0 9deg, #0000 9deg 18deg);
+  --shadow: 0 1px 2px #5c15300f, 0 12px 32px -18px #5c153066;
+  --serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Noto Serif', serif;
   --good: #1d6b3a;
   --good-bg: #e3f4e8;
   --warn: #7a4b00;
@@ -17,7 +24,7 @@
   --info: #1f4f7a;
   --info-bg: #e3eef8;
   --focus: #1a5fb4;
-  --radius: 10px;
+  --radius: 14px;
   --space: 1rem;
   font-family:
     system-ui,
@@ -48,8 +55,14 @@ h5 {
   margin: 1.2em 0 0.5em;
 }
 
+h1,
+h2,
+.brand {
+  font-family: var(--serif);
+}
+
 h1 {
-  font-size: clamp(1.6rem, 4vw, 2.3rem);
+  font-size: clamp(1.7rem, 4.5vw, 2.6rem);
   color: var(--brand-dark);
 }
 
@@ -97,14 +110,30 @@ a {
 }
 
 .site-header {
+  position: relative;
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0.25rem 1rem;
-  padding: 0.75rem clamp(1rem, 4vw, 2rem);
-  background: var(--brand);
+  padding: 0.8rem clamp(1rem, 4vw, 2rem);
+  margin-bottom: 14px;
+  background: var(--hero);
   color: #fff;
-  border-bottom: 4px solid var(--accent);
+}
+
+/* The toran: alternating marigold and saffron flowers hanging from the header */
+.site-header::after {
+  content: '';
+  position: absolute;
+  inset: 100% 0 auto;
+  height: 14px;
+  background:
+    radial-gradient(circle at 50% 0, var(--accent) 0 7px, #0000 7.5px) 0 0 / 28px 14px repeat-x,
+    radial-gradient(circle at 50% 0, var(--saffron) 0 5px, #0000 5.5px) 14px 0 / 28px 14px repeat-x;
+}
+
+.tagline {
+  color: var(--cream);
 }
 
 .site-header p {
@@ -112,13 +141,20 @@ a {
 }
 
 .brand {
-  font-size: 1.35rem;
+  font-size: 1.5rem;
   font-weight: 700;
   letter-spacing: 0.02em;
 }
 
 .brand-mark {
-  color: var(--accent);
+  width: 1.4rem;
+  height: 1.4rem;
+  vertical-align: -0.2rem;
+  fill: var(--accent);
+}
+
+.brand-mark-heart {
+  fill: var(--saffron);
 }
 
 main {
@@ -129,6 +165,7 @@ main {
 
 .site-footer {
   border-top: 1px solid var(--line);
+  background: #fbf1e4;
   padding: 1rem clamp(1rem, 4vw, 2rem) 2rem;
   color: var(--ink-soft);
   font-size: 0.9rem;
@@ -147,6 +184,97 @@ main {
   border-radius: var(--radius);
   padding: var(--space);
   margin: var(--space) 0;
+  box-shadow: var(--shadow);
+}
+
+/* Hero panels: the welcome screen and the plan header */
+.hero,
+.plan-header {
+  margin: 1.75rem 0 1rem;
+  padding: clamp(1.25rem, 3.5vw, 2.25rem);
+  border-radius: 22px;
+  color: #fff;
+  background:
+    var(--rays), radial-gradient(circle at 92% 12%, #f2a90066 0 64px, #0000 65px), var(--hero);
+  box-shadow: var(--shadow);
+}
+
+.hero h1,
+.plan-header h1 {
+  color: #fff;
+  margin-top: 0;
+}
+
+.hero h1 {
+  max-width: 22ch;
+  font-size: clamp(1.9rem, 5vw, 3rem);
+}
+
+.hero .lead,
+.plan-header .plan-meta,
+.plan-header .facts dt {
+  color: var(--cream);
+}
+
+.hero .primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+.hero .primary:hover {
+  background: #ffbf2e;
+}
+
+button.ghost {
+  background: #0000;
+  border-color: #ffffffb3;
+  color: #fff;
+}
+
+button.ghost:hover {
+  background: #ffffff1f;
+}
+
+.returning .hint {
+  margin: 0;
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: var(--space);
+  list-style: none;
+  padding: 0;
+}
+
+.feature {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-top: 4px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 1rem 1.1rem 1.2rem;
+  box-shadow: var(--shadow);
+}
+
+.feature strong {
+  display: block;
+  margin: 0.6rem 0 0.25rem;
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  color: var(--brand-dark);
+}
+
+.feature-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 50%;
+  background: var(--warn-bg);
+  color: var(--brand);
+  font-size: 1.25rem;
+  font-weight: 700;
 }
 
 .card h3,
@@ -165,15 +293,11 @@ main {
 
 .card-grid > .card {
   margin: 0;
+  border-top: 4px solid var(--accent);
 }
 
-.feature-list {
-  max-width: 65ch;
-  padding-left: 1.2rem;
-}
-
-.feature-list li {
-  margin: 0.5rem 0;
+.card-grid > .vendor-booked {
+  border-top-color: var(--good);
 }
 
 /* Buttons */
@@ -182,11 +306,18 @@ button,
   font: inherit;
   min-height: 44px;
   padding: 0.5rem 1rem;
-  border-radius: 8px;
+  border-radius: 999px;
   border: 2px solid var(--brand);
   background: #fff;
   color: var(--brand);
   cursor: pointer;
+  transition:
+    background-color 0.15s,
+    transform 0.15s;
+}
+
+button:active {
+  transform: translateY(1px);
 }
 
 button:hover {
@@ -194,8 +325,10 @@ button:hover {
 }
 
 button.primary {
-  background: var(--brand);
+  background: linear-gradient(135deg, var(--brand), #9b2c50);
+  border-color: #0000;
   color: #fff;
+  box-shadow: 0 6px 16px -8px #7a1f3d99;
 }
 
 button.primary:hover {
@@ -234,13 +367,16 @@ button.link-button {
 
 .actions,
 .examples,
-.task-actions,
-.row-actions {
+.task-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
   align-items: center;
   margin: 0.75rem 0;
+}
+
+.row-actions button {
+  margin: 0.15rem 0.4rem 0.15rem 0;
 }
 
 /* Forms */
@@ -274,7 +410,7 @@ textarea {
   max-width: 36rem;
   padding: 0.5rem 0.6rem;
   border: 2px solid var(--ink-soft);
-  border-radius: 6px;
+  border-radius: 10px;
   background: #fff;
   color: var(--ink);
   margin: 0.25rem 0 0.5rem;
@@ -400,8 +536,12 @@ textarea {
 }
 
 .plan-meta {
-  color: var(--ink-soft);
   margin: 0;
+}
+
+.plan-header .facts div {
+  background: #ffffff1a;
+  border-color: #ffffff38;
 }
 
 .facts {
@@ -415,7 +555,7 @@ textarea {
   background: var(--card);
   border: 1px solid var(--line);
   border-left: 4px solid var(--accent);
-  border-radius: 6px;
+  border-radius: 10px;
   padding: 0.5rem 0.75rem;
 }
 
@@ -433,6 +573,89 @@ textarea {
 .change-box h2,
 .impact h2 {
   margin-top: 0;
+}
+
+.change-box {
+  border-color: #f0cf7a;
+  background: linear-gradient(180deg, #fff4d6, #fff 55%);
+}
+
+.change-box h2::before {
+  content: '';
+  display: inline-block;
+  width: 0.6em;
+  height: 0.6em;
+  margin-right: 0.5em;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 4px #f2a90040;
+}
+
+/* The budget split bar; the legend repeats the numbers as text */
+.budget-bar {
+  margin: 1rem 0;
+}
+
+.budget-bar svg {
+  display: block;
+  width: 100%;
+  height: 14px;
+  clip-path: inset(0 round 7px);
+}
+
+.budget-bar rect {
+  fill: var(--c);
+  stroke: #fff;
+  stroke-width: 2px;
+  vector-effect: non-scaling-stroke;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  list-style: none;
+  padding: 0;
+  margin: 0.6rem 0 0;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+.dot {
+  display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
+  margin-right: 0.35rem;
+  border-radius: 50%;
+  background: var(--c);
+}
+
+.seg-0 {
+  --c: #7a1f3d;
+}
+
+.seg-1 {
+  --c: #e8730c;
+}
+
+.seg-2 {
+  --c: #f2a900;
+}
+
+.seg-3 {
+  --c: #2f7d4f;
+}
+
+.seg-4 {
+  --c: #b0305a;
+}
+
+.seg-5 {
+  --c: #1f6f78;
+}
+
+.seg-6 {
+  --c: #c9b8a6;
 }
 
 .change-list {
@@ -462,6 +685,7 @@ textarea {
 
 .impact {
   border: 2px solid var(--brand);
+  animation: rise 0.3s ease-out;
 }
 
 .impact-label {
@@ -497,6 +721,10 @@ textarea {
   padding: 0.25rem 0;
 }
 
+.data-table thead th {
+  background: #fbf3e8;
+}
+
 .data-table th,
 .data-table td {
   text-align: left;
@@ -511,23 +739,31 @@ textarea {
   white-space: nowrap;
 }
 
-/* Tabs */
+/* Tabs: a rail of pills */
 .tablist {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem;
-  border-bottom: 2px solid var(--brand);
+  gap: 0.3rem;
+  padding: 0.35rem;
   margin-top: 1.5rem;
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  background: #f6ece0;
 }
 
 .tablist [role='tab'] {
-  border-radius: 8px 8px 0 0;
-  border-bottom: none;
+  border-color: #0000;
+  background: #0000;
+}
+
+.tablist [role='tab']:hover {
+  background: #fff;
 }
 
 .tablist [role='tab'][aria-selected='true'] {
-  background: var(--brand);
+  background: linear-gradient(135deg, var(--brand), #9b2c50);
   color: #fff;
+  box-shadow: 0 6px 16px -8px #7a1f3d99;
 }
 
 .tab-note {
@@ -538,31 +774,70 @@ textarea {
   padding: 0.5rem 0;
 }
 
+/* New content rises into place; movement only, so text contrast never dips */
+.tabpanel > * {
+  animation: rise 0.25s ease-out;
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(8px);
+  }
+}
+
 /* Timeline */
 .task-list {
+  --dot: var(--brand);
+  position: relative;
   list-style: none;
-  padding: 0;
+  padding: 0 0 0 1.5rem;
+}
+
+.task-list::before {
+  content: '';
+  position: absolute;
+  top: 0.75rem;
+  bottom: 0.75rem;
+  left: 7px;
+  width: 2px;
+  border-radius: 2px;
+  background: linear-gradient(var(--accent), var(--brand));
 }
 
 .task {
+  position: relative;
   border: 1px solid var(--line);
-  border-left: 5px solid var(--line);
-  border-radius: 6px;
+  border-left: 5px solid var(--dot);
+  border-radius: 10px;
   background: var(--card);
+  box-shadow: var(--shadow);
   padding: 0.5rem 0.75rem;
   margin: 0.5rem 0;
 }
 
+.task::before {
+  content: '';
+  position: absolute;
+  top: 1rem;
+  left: -28px;
+  box-sizing: border-box;
+  width: 14px;
+  height: 14px;
+  border: 3px solid var(--dot);
+  border-radius: 50%;
+  background: var(--paper);
+}
+
 .task-late {
-  border-left-color: var(--bad);
+  --dot: var(--bad);
 }
 
 .task-tight {
-  border-left-color: var(--accent);
+  --dot: var(--accent);
 }
 
 .task-done {
-  border-left-color: var(--good);
+  --dot: var(--good);
 }
 
 .task-main {
@@ -605,6 +880,15 @@ details summary {
   min-height: 44px;
   display: flex;
   align-items: center;
+}
+
+@media (max-width: 40rem) {
+  .hero,
+  .plan-header {
+    background:
+      repeating-conic-gradient(from 0deg at 100% 0, #ffffff0d 0 9deg, #0000 9deg 18deg),
+      radial-gradient(circle at 100% 0, #f2a90066 0 56px, #0000 57px), var(--hero);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

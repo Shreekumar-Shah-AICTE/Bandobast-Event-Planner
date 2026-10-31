@@ -13,7 +13,7 @@
 | Problem fit | Budgets, timelines, vendor checklists and personalised ideas for four event types, plus the Change Test and a quote checker | [What the problem asks](#what-the-problem-asks-and-where-it-lives) |
 | Code quality | Strict TypeScript with no `any`, a pure planning engine, zod contracts shared by browser and server. Lint enforces complexity ≤ 8 and functions ≤ 50 lines. | [Architecture](#architecture), [decisions](docs/decisions.md) |
 | Security | Server-only key, request checks before parsing, schemas both ways, rate limits in a shared store that fail closed, strict CSP | [Security](#security), [SECURITY.md](SECURITY.md) |
-| Efficiency | AI only on request, a 24-hour answer cache, one time budget per request, about 134 kB of gzipped JavaScript | [Efficiency](#efficiency) |
+| Efficiency | AI only on request, a 24-hour answer cache, one time budget per request, about 135 kB of gzipped JavaScript | [Efficiency](#efficiency) |
 | Testing | Unit, property, component and browser tests, 99.7% line coverage, run in CI | [Testing](#testing), [claims](#claims-you-can-check) |
 | Accessibility | WCAG 2.2 AA: no axe violations on any screen, keyboard tabs, managed focus, live regions | [Accessibility](#accessibility-wcag-22-aa) |
 
@@ -99,7 +99,7 @@ flowchart LR
 - **AI only on request.** Planning, rebalancing, scheduling and diffs run in the browser in milliseconds. The engine's JSDoc notes the complexity of its functions.
 - **One time budget per AI request:** the server answers within 20 s, the browser waits 23 s, and Vercel stops the function at 25 s. A single model call gets at most 9 s, so two models fit. A test checks these numbers against each other and against `vercel.json` ([`server/timing.test.ts`](server/timing.test.ts)).
 - **Less work per answer:** a 24-hour answer cache, output token caps per task, low thinking, and requests from a screen you have left are cancelled.
-- **Small, cacheable bundle:** about 134 kB of gzipped JavaScript in three chunks (app, React, zod), no UI framework, and hashed assets cached for a year. Saves are debounced, and flushed when the tab is hidden.
+- **Small, cacheable bundle:** about 135 kB of gzipped JavaScript in three chunks (app, React, zod), no UI framework, and hashed assets cached for a year. Saves are debounced, and flushed when the tab is hidden.
 - **Close to the users:** the function runs in Mumbai (`bom1`), next to the Upstash database.
 
 ## Accessibility (WCAG 2.2 AA)
@@ -120,7 +120,7 @@ flowchart LR
 | Browser | AI client and readers (AI first, then rules), the reducer and saving, and each tab with Testing Library, including focus and announcements | `src/**/*.test.ts(x)` |
 | Journeys | The Change Test, the Gemini path, quotes, a new plan, the keyboard, axe, and no CSP violations under the production headers, on desktop and mobile | `e2e/plan.spec.ts` |
 
-Coverage thresholds are enforced in [`vite.config.ts`](vite.config.ts): 95% overall and 100% of lines for the planning engine. Today: 356 unit and component tests, 99.7% of lines, 98% of branches, plus 14 browser runs. CI runs everything on every push ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
+Coverage thresholds are enforced in [`vite.config.ts`](vite.config.ts): 95% overall and 100% of lines for the planning engine. Today: 358 unit and component tests, 99.7% of lines, 98% of branches, plus 14 browser runs. CI runs everything on every push ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
 
 ## Claims you can check
 
