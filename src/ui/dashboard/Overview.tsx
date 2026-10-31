@@ -1,9 +1,10 @@
-/** Overview tab: what is due next, where the money goes, and vendor progress. */
+/** Overview tab: what is due next, where the money goes, vendor progress and payments. */
 import { CATEGORIES } from '../../domain/catalog.js';
 import { formatDate } from '../../domain/dates.js';
 import { formatCompact, formatInr } from '../../domain/money.js';
 import type { Plan } from '../../domain/plan.js';
 import { listText } from '../common/format.js';
+import { paymentTotals } from '../vendors/Payments.js';
 import { TaskStatusBadge } from '../common/Labels.js';
 import type { PlanControls } from './controls.js';
 
@@ -62,6 +63,24 @@ function NextTasks({ plan }: { readonly plan: Plan }) {
   );
 }
 
+function Payments({ plan }: { readonly plan: Plan }) {
+  const { next, overdue } = plan.payments;
+  if (next === null && plan.payments.paid === 0) {
+    return <p>No payments yet. Add advances and instalments on each vendor&apos;s card.</p>;
+  }
+  const vendor = (category: string) =>
+    plan.vendors.find((card) => card.category === category)?.vendor ?? category;
+  return (
+    <>
+      <p>{`Payments: ${paymentTotals(plan.payments)}.`}</p>
+      {overdue > 0 && <p className="warning-text">{`${formatInr(overdue)} is overdue.`}</p>}
+      {next !== null && (
+        <p>{`Next: ${next.label} to ${vendor(next.category)}, ${formatInr(next.amountPaise)}, due ${formatDate(next.dueOn)}.`}</p>
+      )}
+    </>
+  );
+}
+
 export function Overview({
   controls,
   onGo,
@@ -105,6 +124,7 @@ export function Overview({
           }}
         >
           <p>{`${String(booked)} of ${String(plan.vendors.length)} booked. ${String(plan.quotes.length)} quotes checked.`}</p>
+          <Payments plan={plan} />
         </Card>
       </div>
     </section>

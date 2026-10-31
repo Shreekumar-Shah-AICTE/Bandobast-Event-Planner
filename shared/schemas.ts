@@ -108,6 +108,16 @@ export const QuoteSchema = QuoteDraftSchema.extend({
   addedOn: IsoDateSchema,
 });
 
+/** An advance or instalment owed to a vendor; `paidOn` is set once it is paid. */
+export const PaymentSchema = z.object({
+  id: z.string().min(1).max(LIMITS.maxIdLength),
+  category: CategoryIdSchema,
+  label: z.string().trim().min(1).max(LIMITS.maxTitleLength),
+  amountPaise: paise.min(1),
+  dueOn: IsoDateSchema,
+  paidOn: IsoDateSchema.optional(),
+});
+
 export const SettingsSchema = z.object({
   strategy: z.enum(STRATEGIES),
   formats: z.array(z.string().min(1).max(LIMITS.maxIdLength)).max(LIMITS.maxIdeas),
@@ -120,6 +130,8 @@ export const PlanInputSchema = z.object({
   tasks: z.record(z.string().max(LIMITS.maxIdLength), TaskStateSchema),
   vendors: z.partialRecord(CategoryIdSchema, z.enum(VENDOR_STATUSES)),
   quotes: z.array(QuoteSchema).max(LIMITS.maxQuotes),
+  /** Plans saved before payments existed load with none. */
+  payments: z.array(PaymentSchema).max(LIMITS.maxPayments).default([]),
   settings: SettingsSchema,
 });
 
@@ -174,6 +186,7 @@ export type TaskState = z.infer<typeof TaskStateSchema>;
 export type QuoteItem = z.infer<typeof QuoteItemSchema>;
 export type QuoteDraft = z.infer<typeof QuoteDraftSchema>;
 export type Quote = z.infer<typeof QuoteSchema>;
+export type Payment = z.infer<typeof PaymentSchema>;
 export type Settings = z.infer<typeof SettingsSchema>;
 export type Strategy = Settings['strategy'];
 export type VendorStatus = (typeof VENDOR_STATUSES)[number];

@@ -36,4 +36,13 @@ describe('History: saved plans load back exactly, or not at all', () => {
     expect(planFileName('शादी')).toBe('bandobast-plan.json');
     expect(planFileName(`${'a'.repeat(39)} b`)).toBe(`bandobast-${'a'.repeat(39)}.json`);
   });
+
+  it('loads plans saved before payments existed', () => {
+    const old = serialise([first], 1).replace(',"payments":[]', '');
+    expect(old).not.toContain('payments');
+    expect(deserialise(old)).toEqual({
+      ok: true,
+      value: { schemaVersion: 1, versions: [first], current: 1 },
+    });
+  });
 });

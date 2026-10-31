@@ -1,7 +1,8 @@
 /**
  * The living plan: one pure function turns the user's inputs (profile, fixed
- * lines, task states, vendor statuses, quotes, settings) into budget, scenarios,
- * schedule, vendor cards and quote analyses. Nothing is stored that can be derived.
+ * lines, task states, vendor statuses, quotes, payments, settings) into budget,
+ * scenarios, schedule, vendor cards, quote analyses and payment totals. Nothing is
+ * stored that can be derived.
  */
 import type {
   CategoryId,
@@ -14,6 +15,7 @@ import type {
 import { LIMITS } from '../../shared/limits.js';
 import { buildBudget, type BudgetParams, type BudgetPlan, type FixedLine } from './budget.js';
 import type { IsoDate } from './dates.js';
+import { summarisePayments, type PaymentSummary } from './payments.js';
 import { analyseQuote, type QuoteAnalysis } from './quotes.js';
 import { buildScenarios, type Scenario } from './scenarios.js';
 import { templateFor, type EventTemplate } from './templates/index.js';
@@ -30,6 +32,7 @@ export interface Plan {
   readonly tips: readonly CompressionTip[];
   readonly vendors: readonly VendorCard[];
   readonly quotes: readonly QuoteAnalysis[];
+  readonly payments: PaymentSummary;
 }
 
 /** A fresh plan input for a completed profile. O(1). */
@@ -40,6 +43,7 @@ export function initialInput(profile: EventProfile): PlanInput {
     tasks: {},
     vendors: {},
     quotes: [],
+    payments: [],
     settings: { strategy: 'balanced', formats: [], useContingency: false },
   };
 }
@@ -72,7 +76,7 @@ function quoteCounts(quotes: readonly QuoteAnalysis[]): Map<CategoryId, number> 
 
 /**
  * Derives the whole plan from its inputs. Deterministic: same inputs and `today`
- * give the same plan, so versions only store inputs. O(c log c + t² + q·n).
+ * give the same plan, so versions only store inputs. O(c log c + t² + q·n + p log p).
  */
 export function buildPlan(input: PlanInput, today: IsoDate): Plan {
   const template = templateFor(input.profile.eventType);
@@ -108,6 +112,7 @@ export function buildPlan(input: PlanInput, today: IsoDate): Plan {
     tips: compressionTips(timeline),
     vendors,
     quotes,
+    payments: summarisePayments(input.payments, budget.lines, today),
   };
 }
 

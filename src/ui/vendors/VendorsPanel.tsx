@@ -1,4 +1,4 @@
-/** Vendors tab: a card per vendor with status, what to ask for, questions and a Maps search. */
+/** Vendors tab: a card per vendor with status, what to ask for, questions, payments and a Maps search. */
 import type { VendorStatus } from '../../../shared/schemas.js';
 import { mapsSearchUrl } from '../../domain/calendar.js';
 import { CATEGORIES } from '../../domain/catalog.js';
@@ -6,6 +6,7 @@ import { formatInr } from '../../domain/money.js';
 import { nextStatuses, STATUS_LABELS, type VendorCard } from '../../domain/vendors.js';
 import { plural } from '../common/format.js';
 import type { PlanControls } from '../dashboard/controls.js';
+import { VendorPaymentsBlock } from './Payments.js';
 
 export function VendorsPanel({ controls }: { readonly controls: PlanControls }) {
   const { vendors } = controls.plan;
@@ -57,6 +58,7 @@ function VendorItem({
           ))}
         </ul>
       </details>
+      <VendorPaymentsBlock category={card.category} vendor={card.vendor} controls={controls} />
       {search !== null && (
         <a
           href={mapsSearchUrl(search, input.profile.city)}

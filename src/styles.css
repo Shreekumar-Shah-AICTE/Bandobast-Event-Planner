@@ -358,6 +358,7 @@ textarea {
 
 .badge-estimate,
 .badge-task-ok,
+.badge-pay-due,
 .badge-source-rules {
   color: var(--ink-soft);
   background: #f4efe9;
@@ -374,6 +375,7 @@ textarea {
 .badge-comfortable,
 .badge-fits,
 .badge-task-done,
+.badge-pay-paid,
 .badge-best {
   color: var(--good);
   background: var(--good-bg);
@@ -386,7 +388,8 @@ textarea {
 }
 
 .badge-over,
-.badge-task-late {
+.badge-task-late,
+.badge-pay-overdue {
   color: var(--bad);
   background: var(--bad-bg);
 }

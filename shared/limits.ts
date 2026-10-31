@@ -32,4 +32,6 @@ export const LIMITS = {
   /** Rebalance options shown at once. */
   maxScenarios: 3,
   maxPlaceholders: 60,
+  /** Advances and instalments across all vendors. */
+  maxPayments: 60,
 } as const;
