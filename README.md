@@ -19,7 +19,7 @@
 
 ## The Change Test: a 30-second demo
 
-1. Open the app and choose **Try the sample: Riya & Arjun's wedding, Pune** (200 guests, ₹12 lakh, 18 Feb 2027).
+1. Open the app and choose **Try the sample: Riya & Arjun's wedding, Pune** (200 guests, ₹12 lakh, 110 days from today).
 2. Click the example **"50 more guests, budget down 10%, event 2 weeks earlier"**, or type your own, for example _"50 log zyada, budget 10% kam"_. Then click **Check what this changes**. You see the three changes it read, each with the words it came from, and you confirm them.
 3. The **What changed** report shows every budget line before and after, the reserve, the budget check (Fits → Short), tasks that became late, quote totals that changed, and up to three ways to rebalance, ranked by your own priorities. **Use this option** applies the fix to that same new version, so the change and its fix stay one step in History. **Undo this change** restores the old one.
 
