@@ -50,10 +50,14 @@ function redisFrom(env: ParsedEnv): ServerEnv['redis'] {
 /** Reads the settings this function needs; never throws on missing values. O(1). */
 export function readEnv(source: Readonly<Record<string, string | undefined>>): ServerEnv {
   const env = EnvSchema.parse(source);
+  const redis = redisFrom(env);
   return {
     geminiApiKey: env.GEMINI_API_KEY ?? null,
     models: modelsFrom(env.GEMINI_MODELS),
-    redis: redisFrom(env),
-    salt: env.RATE_LIMIT_SALT ?? 'bandobast',
+    redis,
+    // The salt must be secret, or hashed IPs could be reversed by brute force.
+    // Without RATE_LIMIT_SALT the store's token (also a secret) is used; with no
+    // store there is no limiter and no hashing.
+    salt: env.RATE_LIMIT_SALT ?? redis?.token ?? '',
   };
 }

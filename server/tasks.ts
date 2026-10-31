@@ -15,6 +15,8 @@ import {
   type ChangeWire,
 } from '../shared/aiContracts.js';
 import { LIMITS } from '../shared/limits.js';
+import { field } from '../src/domain/access.js';
+import { DAYS_PER_MONTH, DAYS_PER_WEEK, NUMBER_WORDS } from '../src/domain/constants.js';
 import { addDays } from '../src/domain/dates.js';
 import { fillPlaceholders } from '../src/domain/explain.js';
 import { amountAppears, quotedFrom, redactContacts } from '../src/domain/grounding.js';
@@ -24,8 +26,19 @@ import { templateFor } from '../src/domain/templates/index.js';
 import { SERVER_CONFIG } from './config.js';
 import { changePrompt, explainPrompt, ideasPrompt, intakePrompt, quotePrompt } from './prompts.js';
 
-const NUMBER_RE =
-  /\d|\b(a|an|one|two|three|four|five|six|seven|eight|ten|ek|do|teen|char|paanch)\b/iu;
+const NUMBER_WORD_RE = new RegExp(
+  String.raw`\b(?:${Object.keys(NUMBER_WORDS).join('|')})\b`,
+  'giu',
+);
+
+/** Every whole number written in the text, in digits or as an English/Hinglish word. O(n). */
+function numbersIn(text: string): number[] {
+  const digits = [...text.replaceAll(',', '').matchAll(/\d+/gu)].map((match) => Number(match[0]));
+  const words = [...text.matchAll(NUMBER_WORD_RE)].map((match) =>
+    field(NUMBER_WORDS, match[0].toLowerCase()),
+  );
+  return [...digits, ...words];
+}
 
 /** True when the integer is written in the text as a number of its own ("250", "2,50"). */
 const written = (value: number, text: string): boolean =>
@@ -48,18 +61,22 @@ export function guardIntake(out: AiOutput<'intake'>, input: AiInput<'intake'>): 
   };
 }
 
-const hasNumber = (wire: ChangeWire): boolean => NUMBER_RE.test(wire.evidence);
 const size = (wire: ChangeWire): number => Math.abs(Number(wire.value));
 
-/** The numbers a change claims must be written in its evidence. */
+/** Days as written: a number of days, weeks or months ("14 days", "2 weeks", "ek mahina"). */
+const DAY_UNITS = [1, DAYS_PER_WEEK, DAYS_PER_MONTH] as const;
+const daysWritten = (days: number, evidence: string): boolean =>
+  numbersIn(evidence).some((count) => DAY_UNITS.some((unit) => count * unit === days));
+
+/** The numbers a change claims must be written in its own evidence. */
 const NUMBERS_HOLD: Readonly<Record<ChangeWire['kind'], (wire: ChangeWire) => boolean>> = {
   budget: (wire) =>
     wire.mode === 'addPct'
       ? written(size(wire), wire.evidence)
       : amountAppears(size(wire), wire.evidence),
-  guests: hasNumber,
-  dateShift: hasNumber,
-  taskDelay: hasNumber,
+  guests: (wire) => numbersIn(wire.evidence).includes(size(wire)),
+  dateShift: (wire) => daysWritten(size(wire), wire.evidence),
+  taskDelay: (wire) => daysWritten(size(wire), wire.evidence),
   dateSet: () => true,
   taskDone: () => true,
 };
@@ -92,7 +109,8 @@ export function guardQuote(out: AiOutput<'quote'>, input: AiInput<'quote'>): AiO
       .map((item) => ({ ...item, quantity: keep(item.quantity, (count) => written(count, text)) })),
     minGuarantee: keep(out.minGuarantee, (count) => written(count, text)),
     gstRatePct: keep(out.gstRatePct, rateWritten),
-    notes: out.notes.map(redactContacts),
+    // Notes are shown to the user, so they must be the vendor's own words.
+    notes: out.notes.filter((note) => quotedFrom(note, text)).map(redactContacts),
   };
 }
 

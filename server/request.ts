@@ -33,13 +33,30 @@ function sameHost(origin: string, url: string): boolean {
   }
 }
 
-/** Reads the body with a hard size cap (the header can be missing or wrong). */
+/**
+ * Reads the body as a stream and stops as soon as it passes the size cap, so a
+ * missing or wrong Content-Length cannot make the function buffer a huge body. O(n).
+ */
 export async function readBody(request: Request): Promise<string | null> {
-  const text = await request.text();
-  return new TextEncoder().encode(text).length > SERVER_CONFIG.maxBodyBytes ? null : text;
+  if (request.body === null) return '';
+  const reader: ReadableStreamDefaultReader<Uint8Array> = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  for (let part = await reader.read(); !part.done; part = await reader.read()) {
+    size += part.value.byteLength;
+    if (size > SERVER_CONFIG.maxBodyBytes) {
+      await reader.cancel();
+      return null;
+    }
+    chunks.push(part.value);
+  }
+  return Buffer.concat(chunks).toString('utf8');
 }
 
-/** A salted hash of the client IP: the limiter never stores raw addresses. O(1). */
+/**
+ * A keyed hash of the client IP, so the limiter never stores raw addresses.
+ * On Vercel both headers are set by the platform's edge, not by the caller. O(1).
+ */
 export async function clientKey(request: Request, salt: string): Promise<string> {
   const forwarded = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
   const ip = request.headers.get('x-real-ip') ?? forwarded ?? 'unknown';

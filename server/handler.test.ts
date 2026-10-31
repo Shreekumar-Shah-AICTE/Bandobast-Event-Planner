@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { ChangeWire } from '../shared/aiContracts.js';
 import { readEnv } from './env.js';
-import { createHandler, type HandlerDeps } from './handler.js';
+import { createHandler, type HandlerDeps, type Timing } from './handler.js';
 import type { RequestLog } from './log.js';
 import type { ModelCall } from './model.js';
 import type { AnswerCache, LimitDecision } from './store.js';
@@ -67,7 +67,16 @@ interface Setup {
   readonly decision?: LimitDecision;
   readonly cache?: AnswerCache | null;
   readonly limiter?: null;
+  readonly now?: () => number;
+  readonly timing?: Partial<Timing>;
 }
+
+const FAST: Timing = {
+  serverBudgetMs: 2_000,
+  modelTimeoutMs: 20,
+  minAttemptMs: 5,
+  storeTimeoutMs: 50,
+};
 
 function setup(options: Setup = {}) {
   const logs: RequestLog[] = [];
@@ -82,8 +91,8 @@ function setup(options: Setup = {}) {
     cache: options.cache === undefined ? memoryCache() : options.cache,
     callModel: model,
     log: (entry) => logs.push(entry),
-    now: () => NOW,
-    modelTimeoutMs: 20,
+    now: options.now ?? (() => NOW),
+    timing: { ...FAST, ...options.timing },
   };
   return { handle: createHandler(deps), logs, check, model };
 }
@@ -328,7 +337,7 @@ describe('prompt injection in a pasted quote', () => {
     minGuarantee: 200,
     gst: 'extra',
     gstRatePct: 18,
-    notes: ['Call 98765 43210 to book'],
+    notes: ['Call 98765 43210', 'Advance is fully refundable'],
   };
 
   it('keeps the text fenced as data and checks the answer in code', async () => {
@@ -341,7 +350,7 @@ describe('prompt injection in a pasted quote', () => {
     expect(request?.prompt.trimEnd().endsWith('</user_text>')).toBe(true);
     expect(body.data).toMatchObject({
       items: [{ label: 'Veg thali', amountRupees: 950 }],
-      notes: ['Call [phone] to book'],
+      notes: ['Call [phone]'],
     });
   });
 });
@@ -363,5 +372,78 @@ describe('other tasks reach the model with their own schema', () => {
     expect(response.status).toBe(502);
     expect(logs[0]?.outcome).toBe('model-a:guard,model-b:schema');
     expect(model.mock.calls[0]?.[1].schema).toMatchObject({ required: ['text'] });
+  });
+});
+
+describe('the request stays inside its time budget', () => {
+  it('does not start a second model when too little time is left', async () => {
+    let clock = NOW;
+    const model = vi.fn<ModelCall>(() => {
+      clock += 18_500;
+      return Promise.resolve('not json');
+    });
+    const { handle, logs } = setup({
+      model,
+      now: () => clock,
+      timing: {
+        serverBudgetMs: 20_000,
+        modelTimeoutMs: 9_000,
+        minAttemptMs: 2_000,
+        storeTimeoutMs: 1_000,
+      },
+    });
+    const response = await handle(post('change', CHANGE_INPUT));
+    expect(response.status).toBe(502);
+    expect(model).toHaveBeenCalledTimes(1);
+    expect(logs[0]?.outcome).toBe('model-a:json,model-b:budget');
+  });
+
+  it('treats a cache that does not answer in time as a miss', async () => {
+    const slow: AnswerCache = {
+      get: () => new Promise(() => undefined),
+      set: () => new Promise(() => undefined),
+    };
+    const { handle } = setup({ cache: slow, timing: { storeTimeoutMs: 10 } });
+    const body = await read(await handle(post('change', CHANGE_INPUT)));
+    expect(body.model).toBe('model-a');
+  });
+
+  it('logs the provider status code of a failed call', async () => {
+    const quota = Object.assign(new Error('quota'), { status: 429 });
+    const { handle, logs } = setup({
+      model: fakeModel({ 'model-a': [quota], 'model-b': ['[]'] }),
+    });
+    await handle(post('change', CHANGE_INPUT));
+    expect(logs[0]?.outcome).toBe('model-a:error-429,model-b:schema');
+  });
+
+  it('stops reading a streamed body as soon as it passes the cap', async () => {
+    const { handle } = setup();
+    let pulls = 0;
+    const chunk = new TextEncoder().encode('x'.repeat(4_096));
+    const body = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        pulls += 1;
+        controller.enqueue(chunk);
+      },
+    });
+    const request = new Request(`${ORIGIN}/api/ai/change`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', origin: ORIGIN },
+      body,
+      duplex: 'half',
+    });
+    const response = await handle(request);
+    expect(response.status).toBe(413);
+    expect(pulls).toBeLessThan(10);
+  });
+
+  it('answers 400 for an empty POST', async () => {
+    const { handle } = setup();
+    const request = new Request(`${ORIGIN}/api/ai/change`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', origin: ORIGIN },
+    });
+    expect((await handle(request)).status).toBe(400);
   });
 });

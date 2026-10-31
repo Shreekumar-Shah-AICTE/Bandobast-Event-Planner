@@ -49,6 +49,9 @@ const params = (call: ModelCall, models = ['m1', 'm2']): AttemptParams => ({
     return 'bad' in answer ? err('guard') : ok(answer);
   },
   timeoutMs: 20,
+  minAttemptMs: 5,
+  deadline: Date.now() + 10_000,
+  now: Date.now,
 });
 
 describe('firstValid', () => {
@@ -76,5 +79,22 @@ describe('firstValid', () => {
     const call = vi.fn<ModelCall>(() => replies.shift()!());
     const attempts = await firstValid(params(call));
     expect(attempts.map((entry) => entry.outcome)).toEqual(['error', 'timeout']);
+  });
+});
+
+describe('firstValid within a deadline', () => {
+  it('does not call a model once the deadline has passed', async () => {
+    const call = vi.fn<ModelCall>(() => Promise.resolve('{}'));
+    const attempts = await firstValid({ ...params(call), deadline: Date.now() - 1 });
+    expect(attempts).toEqual([{ outcome: 'budget', model: 'm1' }]);
+    expect(call).not.toHaveBeenCalled();
+  });
+
+  it('keeps the status code of a provider error', async () => {
+    const call = vi.fn<ModelCall>(() =>
+      Promise.reject(Object.assign(new Error('bad schema'), { status: 400 })),
+    );
+    const attempts = await firstValid(params(call, ['m1']));
+    expect(attempts).toEqual([{ outcome: 'error', model: 'm1', status: 400 }]);
   });
 });

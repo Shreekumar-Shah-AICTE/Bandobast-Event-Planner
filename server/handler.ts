@@ -1,17 +1,27 @@
 /**
  * POST /api/ai/:task. Order: request checks → input schema → rate limit (shared
  * store, fails closed) → answer cache → model chain with output schema and code
- * checks. Every failure tells the client whether to fall back to its rules.
+ * checks. Every failure tells the client whether to fall back to its rules, and
+ * the whole request fits one time budget (shared/timing.ts).
  */
 import { AiTaskSchema, type AiTask } from '../shared/aiContracts.js';
 import type { ServerEnv } from './env.js';
 import { STATUS, fail, json } from './http.js';
 import type { Logger } from './log.js';
-import { firstValid, type ModelCall } from './model.js';
+import { firstValid, type Attempt, type ModelCall } from './model.js';
 import { PROMPT_VERSION, SYSTEM_INSTRUCTION } from './prompts.js';
 import { checkRequest, clientKey, readBody } from './request.js';
 import { sha256, type AnswerCache, type LimitDecision, type Limiter } from './store.js';
 import { TASKS, type PreparedTask } from './tasks.js';
+import { within } from './time.js';
+
+/** Time limits for one request (tests shorten them). */
+export interface Timing {
+  readonly serverBudgetMs: number;
+  readonly modelTimeoutMs: number;
+  readonly minAttemptMs: number;
+  readonly storeTimeoutMs: number;
+}
 
 export interface HandlerDeps {
   readonly env: ServerEnv;
@@ -20,8 +30,7 @@ export interface HandlerDeps {
   readonly callModel: ModelCall | null;
   readonly log: Logger;
   readonly now: () => number;
-  /** Per-model timeout; tests shorten it. */
-  readonly modelTimeoutMs: number;
+  readonly timing: Timing;
 }
 
 const MS_PER_SECOND = 1000;
@@ -84,7 +93,7 @@ export function createHandler(deps: HandlerDeps): (request: Request) => Promise<
       );
     }
     const live: LiveDeps = { ...deps, limiter, callModel };
-    return done(...(await serve({ task: task.data, job, request }, live)));
+    return done(...(await serve({ task: task.data, job, request, started }, live)));
   };
 }
 
@@ -92,6 +101,7 @@ interface Job {
   readonly task: AiTask;
   readonly job: PreparedTask;
   readonly request: Request;
+  readonly started: number;
 }
 
 type Reply = [Response, string, string?];
@@ -119,10 +129,24 @@ function blockedBy(decision: LimitDecision, headers: HeaderMap): Reply | null {
   return null;
 }
 
-async function answer({ task, job }: Job, deps: LiveDeps, headers: HeaderMap): Promise<Reply> {
+/** "model:outcome" per attempt, with the provider's status code when there was one. */
+const describe = (attempts: readonly Attempt[]): string =>
+  attempts
+    .map(({ model, outcome, status }) =>
+      status === undefined ? `${model}:${outcome}` : `${model}:${outcome}-${String(status)}`,
+    )
+    .join(',');
+
+async function answer(
+  { task, job, started }: Job,
+  deps: LiveDeps,
+  headers: HeaderMap,
+): Promise<Reply> {
+  const { timing, cache } = deps;
   const key = await sha256(PROMPT_VERSION, task, deps.env.models.join(','), job.inputJson);
-  const cached = deps.cache === null ? null : job.accept(await deps.cache.get(key));
-  if (cached?.ok === true) {
+  const stored = cache === null ? null : await within(cache.get(key), timing.storeTimeoutMs, null);
+  const cached = job.accept(stored);
+  if (cached.ok) {
     return [json({ ok: true, data: cached.value, model: 'cache' }, STATUS.ok, headers), 'cache'];
   }
   const attempts = await firstValid({
@@ -135,17 +159,20 @@ async function answer({ task, job }: Job, deps: LiveDeps, headers: HeaderMap): P
       maxOutputTokens: job.maxOutputTokens,
     },
     accept: job.accept,
-    timeoutMs: deps.modelTimeoutMs,
+    timeoutMs: timing.modelTimeoutMs,
+    minAttemptMs: timing.minAttemptMs,
+    // Leave time to store the answer and reply inside the server budget.
+    deadline: started + timing.serverBudgetMs - timing.storeTimeoutMs,
+    now: deps.now,
   });
   const last = attempts.at(-1);
   if (last?.outcome !== 'ok') {
-    const outcome = attempts.map((entry) => `${entry.model}:${entry.outcome}`).join(',');
     return [
       fail(STATUS.badGateway, 'AI answer failed checks; using built-in rules.', { headers }),
-      outcome,
+      describe(attempts),
     ];
   }
-  await deps.cache?.set(key, last.value);
+  if (cache !== null) await within(cache.set(key, last.value), timing.storeTimeoutMs, undefined);
   return [
     json({ ok: true, data: last.value, model: last.model }, STATUS.ok, headers),
     'ok',

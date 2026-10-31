@@ -55,7 +55,7 @@ export function quotePrompt(input: AiInput<'quote'>): string {
     '- One item per priced line. amountRupees = the number written for that line; do no maths and do not add GST.',
     '- unit: perGuest for per plate/head/person, perHour, perDay, perPiece, otherwise fixed. quantity only if written.',
     '- minGuarantee: the minimum plates or guests, if written. gst: included, extra or unknown; gstRatePct only if a rate is written.',
-    '- notes: up to 6 short conditions worth checking (advance, cancellation, extras). No phone numbers or e-mail addresses.',
+    '- notes: up to 6 conditions worth checking (advance, cancellation, extras), each copied word for word from the quote. No phone numbers or e-mail addresses.',
     '- vendorName: as written, or null.',
     fence(input.text),
   ].join('\n');

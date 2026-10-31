@@ -19,6 +19,6 @@ export function liveDeps(source: Readonly<Record<string, string | undefined>>): 
     callModel: env.geminiApiKey === null ? null : geminiCaller(env.geminiApiKey),
     log: stdoutLogger,
     now: Date.now,
-    modelTimeoutMs: SERVER_CONFIG.modelTimeoutMs,
+    timing: SERVER_CONFIG.timing,
   };
 }

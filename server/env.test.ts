@@ -8,7 +8,7 @@ describe('readEnv', () => {
         geminiApiKey: null,
         models: ['gemini-3.8-flash', 'gemini-3.5-flash-lite'],
         redis: null,
-        salt: 'bandobast',
+        salt: '',
       });
     }
   });
@@ -29,10 +29,12 @@ describe('readEnv', () => {
     expect(readEnv({ KV_REST_API_URL: 'https://kv' }).redis).toBe(null);
   });
 
-  it('reads the key and salt', () => {
+  it('reads the key and a secret salt, defaulting to the store token', () => {
     expect(readEnv({ GEMINI_API_KEY: 'k', RATE_LIMIT_SALT: 's' })).toMatchObject({
       geminiApiKey: 'k',
       salt: 's',
     });
+    const store = { KV_REST_API_URL: 'https://kv', KV_REST_API_TOKEN: 'secret-token' };
+    expect(readEnv(store).salt).toBe('secret-token');
   });
 });

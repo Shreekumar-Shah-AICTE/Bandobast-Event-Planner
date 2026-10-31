@@ -189,6 +189,20 @@ describe('guardChange keeps changes whose evidence and numbers are in the text',
     expect(guarded.unparsed[1]).toBe('budget 20 lakh');
   });
 
+  it('requires the claimed number in the evidence, in digits, weeks, months or words', () => {
+    const text2 = 'push it two weeks later, 10 guests fewer, wait one month, 3 weeks earlier';
+    const changes = [
+      wire({ kind: 'dateShift', value: 14, evidence: 'push it two weeks later' }),
+      wire({ kind: 'guests', mode: 'add', value: -10, evidence: '10 guests fewer' }),
+      wire({ kind: 'dateShift', value: 30, evidence: 'wait one month' }),
+      wire({ kind: 'dateShift', value: -20, evidence: '3 weeks earlier' }),
+      wire({ kind: 'guests', mode: 'add', value: 25, evidence: '10 guests fewer' }),
+    ];
+    const guarded = guardChange({ changes, unparsed: [] }, { ...input, text: text2 });
+    expect(guarded.changes.map((change) => change.value)).toEqual([14, -10, 30]);
+    expect(guarded.unparsed).toEqual(['3 weeks earlier', '10 guests fewer']);
+  });
+
   it('accepts known task ids and dates without numbers in the evidence', () => {
     const kept = [
       wire({ kind: 'taskDone', taskId: 'venue', evidence: 'venue is booked' }),
@@ -220,17 +234,17 @@ describe('guardQuote keeps only written amounts, counts and rates', () => {
     minGuarantee: 200,
     gst: 'extra',
     gstRatePct: 18,
-    notes: ['Call 98765 43210 or a@b.in to confirm'],
+    notes: ['Call 98765 43210 or a@b.in', 'Free cancellation anytime'],
   };
 
-  it('keeps grounded values, drops an invented line and redacts contacts', () => {
+  it('keeps grounded values, drops invented lines and notes, and redacts contacts', () => {
     const guarded = guardQuote(answer, { text, category: 'catering' });
     expect(guarded.vendorName).toBe('Shree Caterers');
     expect(guarded.items.map((item) => item.amountRupees)).toEqual([950, 25_000]);
     expect(guarded.items[0]?.quantity).toBe(200);
     expect(guarded.minGuarantee).toBe(200);
     expect(guarded.gstRatePct).toBe(18);
-    expect(guarded.notes).toEqual(['Call [phone] or [email] to confirm']);
+    expect(guarded.notes).toEqual(['Call [phone] or [email]']);
   });
 
   it('drops a vendor name, quantity, guarantee or rate that is not written', () => {
