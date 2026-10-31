@@ -1,8 +1,14 @@
+<img src="public/favicon.svg" alt="Bandobast logo: a marigold" width="80" height="80" align="right">
+
 # Bandobast: plans that hold when things change
+
+[![CI](https://github.com/Shreekumar-Shah-AICTE/Bandobast-Event-Planner/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Shreekumar-Shah-AICTE/Bandobast-Event-Planner/actions/workflows/ci.yml) [![Live demo](https://img.shields.io/badge/live_demo-bandobast--event--planner.vercel.app-7a1f3d)](https://bandobast-event-planner.vercel.app) [![Licence: all rights reserved](https://img.shields.io/badge/licence-all_rights_reserved-5c1530)](LICENSE)
 
 **Bandobast** (Hindi/Urdu for "arrangements") is a GenAI planning assistant for Indian weddings, birthdays, anniversaries and community events. It builds a budget, a timeline, vendor checklists and ideas for your guests. When something changes, like more guests, a smaller budget, an earlier date or a new quote, it shows exactly what moved and how to rebalance.
 
 **Live app:** https://bandobast-event-planner.vercel.app · **Stack:** React 19, TypeScript, Vite, Vercel Functions, Gemini API, Upstash Redis
+
+![Bandobast's plan screen for the sample wedding: a maroon header with the time left, the budget check, late tasks and vendors booked, then the "Something changed?" box with example changes, and the plan's seven tabs.](docs/images/plan.png)
 
 > Gemini reads the messy text: change requests in English or Hinglish, pasted vendor quotes, free-text event descriptions. It also writes ideas and plain-language comparisons. Code does every calculation and checks every AI answer before it is shown. When the AI is unavailable, built-in rules take over, and the app always says which of the two read your text.
 
@@ -21,7 +27,11 @@
 
 1. Open the app and choose **Try the sample: Riya & Arjun's wedding, Pune** (200 guests, ₹12 lakh, 110 days from today).
 2. Click the example **"50 more guests, budget down 10%, event 2 weeks earlier"**, or type your own, for example _"50 log zyada, budget 10% kam"_. Then click **Check what this changes**. You see the three changes it read, each with the words it came from, and you confirm them.
-3. The **What changed** report shows every budget line before and after, the reserve, the budget check (Fits → Short), tasks that became late, quote totals that changed, and up to three ways to rebalance, ranked by your own priorities. **Use this option** applies the fix to that same new version, so the change and its fix stay one step in History. **Undo this change** restores the old one.
+3. The **What changed** report shows every budget line before and after, the reserve, the budget check (for example Fits → Over budget), tasks that became late, quote totals that changed, and up to three ways to rebalance, ranked by your own priorities. **Use this option** applies the fix to that same new version, so the change and its fix stay one step in History. **Undo this change** restores the old one.
+
+| What changed | Budget | Timeline |
+| --- | --- | --- |
+| ![The What changed report after the Hinglish change: guests 200 to 250, budget ₹12 lakh to ₹10.8 lakh, the event two weeks earlier, the budget check going from Fits to Over budget, and every budget line before and after.](docs/images/report.png) | ![The Budget tab: a coloured bar of where the money goes, the reserve for surprises, the budget check, and each line labelled Estimate with a Set my number button.](docs/images/budget.png) | ![The Timeline tab: tasks on a rail with Late and On track badges, ways to catch up, Shorten it buttons, Add to Google Calendar links and a form to add your own task.](docs/images/timeline.png) |
 
 Every version is kept in **History** (the last 30), with what each one changed and a one-click restore. To move a plan to another device, **save it to a file** and open that file there. An opened file passes the same checks as a saved plan, and replacing a plan asks first.
 
@@ -51,6 +61,34 @@ Every version is kept in **History** (the last 30), with what each one changed a
 - **Models:** `gemini-3.5-flash-lite` first, then `gemini-3.8-flash` only if the first times out, errors or fails a check (a cheap-first cascade: on the live app the light model answered in about a second, and the larger one often ran past the 9-second per-model timeout). Both run through `@google/genai` with JSON-schema structured output, low thinking and temperature 1 (the Gemini 3 default, which Google advises keeping).
 - **Prompting:** user text is fenced and labelled as data, never as instructions. Each task has its own system instruction ([`server/prompts.ts`](server/prompts.ts)) and an output token cap ([`server/config.ts`](server/config.ts)).
 - **Cost and speed:** identical requests reuse a validated answer for 24 hours. The cache key is a one-way hash of the request, never the raw text.
+
+One AI request, step by step:
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant B as Browser (src/ai)
+  participant F as Vercel Function (server/)
+  participant R as Upstash Redis
+  participant G as Gemini
+  B->>F: POST /api/ai/:task (same origin, JSON)
+  F->>F: Known task, POST, JSON, same origin, size cap, then the zod schema
+  F->>R: Rate limit for this client (fails closed)
+  F->>R: Checked answer stored for this exact input?
+  alt Stored and still passes the checks
+    R-->>F: Stored answer
+  else Not stored
+    F->>G: Light model, JSON schema, time limit
+    G-->>F: JSON answer
+    F->>F: Schema and code checks against the user's own words
+    opt Timed out, failed or rejected
+      F->>G: Larger model, same checks
+    end
+    F->>R: Store the checked answer for 24 hours
+  end
+  F-->>B: Checked answer and model name, or an error that says whether to fall back
+  B->>B: Checks the answer again. If the AI cannot answer, the built-in rules do.
+```
 
 ## Architecture
 
