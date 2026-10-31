@@ -21,6 +21,10 @@ export default tseslint.config(
     },
     rules: {
       complexity: ['error', 8],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { ignoreRestSiblings: true, argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
       'max-depth': ['error', 3],
       'max-lines': ['error', { max: 250, skipBlankLines: true, skipComments: true }],
       'max-lines-per-function': ['error', { max: 50, skipBlankLines: true, skipComments: true }],
@@ -64,9 +68,11 @@ export default tseslint.config(
       'src/domain/ideaLibrary.ts',
       'server/config.ts',
       '*.config.ts',
+      '*.config.js',
     ],
     rules: {
       '@typescript-eslint/no-magic-numbers': 'off',
+      '@typescript-eslint/no-non-null-assertion': 'off',
       'max-lines-per-function': 'off',
       'max-lines': 'off',
     },

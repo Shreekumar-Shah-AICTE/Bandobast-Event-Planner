@@ -8,6 +8,7 @@ import { TIGHT_SLACK_DAYS } from './constants.js';
 import { addDays, toDayNumber, type IsoDate } from './dates.js';
 import { err, ok, type Result } from './result.js';
 import type { TaskTemplate } from './templates/index.js';
+import { lookup } from './access.js';
 
 export type TaskStatus = 'done' | 'late' | 'tight' | 'ok';
 
@@ -57,7 +58,7 @@ function successorsOf(nodes: readonly Node[]): Result<Map<string, string[]>, Gra
     if (unknown !== undefined) {
       return err({ kind: 'unknownDependency', taskId: node.id, dependsOn: unknown });
     }
-    for (const dep of node.dependsOn) successors.get(dep)?.push(node.id);
+    for (const dep of node.dependsOn) lookup(successors, dep).push(node.id);
   }
   return ok(successors);
 }
@@ -74,8 +75,8 @@ export function topoOrder(nodes: readonly Node[]): Result<string[], GraphError> 
   const order: string[] = [];
   for (let next = queue.shift(); next !== undefined; next = queue.shift()) {
     order.push(next);
-    for (const succ of graph.value.get(next) ?? []) {
-      const remaining = (indegree.get(succ) ?? 0) - 1;
+    for (const succ of lookup(graph.value, next)) {
+      const remaining = lookup(indegree, succ) - 1;
       indegree.set(succ, remaining);
       if (remaining === 0) queue.push(succ);
     }
@@ -101,7 +102,7 @@ function forwardPass(
   const timing = new Map<string, Timing>();
   for (const task of order) {
     const state = states[task.id] ?? DEFAULT_TASK_STATE;
-    const ready = Math.max(today, ...task.dependsOn.map((dep) => timing.get(dep)?.ef ?? today));
+    const ready = Math.max(today, ...task.dependsOn.map((dep) => lookup(timing, dep).ef));
     const es = state.done && state.doneOn !== undefined ? toDayNumber(state.doneOn) : ready;
     timing.set(task.id, { es, ef: es + effectiveDuration(task, state) });
   }
@@ -118,9 +119,9 @@ function backwardPass(
   for (const task of [...order].reverse()) {
     const successorStarts = order
       .filter((other) => other.dependsOn.includes(task.id))
-      .map((other) => latestStart.get(other.id) ?? eventDay);
+      .map((other) => lookup(latestStart, other.id));
     const lf = Math.min(eventDay - task.leadDays, ...successorStarts);
-    const t = timing.get(task.id) ?? { es: 0, ef: 0 };
+    const t = lookup(timing, task.id);
     latestFinish.set(task.id, lf);
     latestStart.set(task.id, lf - (t.ef - t.es));
   }
@@ -151,7 +152,7 @@ export function schedule(params: ScheduleParams): Schedule {
   const sorted = topoOrder(params.tasks);
   if (!sorted.ok) return { tasks: [], criticalPath: [], lateCount: 0 };
   const byId = new Map(params.tasks.map((task) => [task.id, task]));
-  const order = sorted.value.flatMap((id) => byId.get(id) ?? []);
+  const order = sorted.value.map((id) => lookup(byId, id));
   const today = toDayNumber(params.today);
   const timing = forwardPass(order, params.states, today);
   const latestFinish = backwardPass(order, timing, toDayNumber(params.eventDate));
@@ -176,8 +177,8 @@ function toScheduled(
   latestFinish: ReadonlyMap<string, number>,
 ): ScheduledTask {
   const state = params.states[task.id] ?? DEFAULT_TASK_STATE;
-  const t = timing.get(task.id) ?? { es: 0, ef: 0 };
-  const lf = latestFinish.get(task.id) ?? t.ef;
+  const t = lookup(timing, task.id);
+  const lf = lookup(latestFinish, task.id);
   const slack = lf - t.ef;
   const base = toDayNumber(params.today);
   const at = (day: number): IsoDate => addDays(params.today, day - base);

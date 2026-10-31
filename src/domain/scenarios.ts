@@ -113,7 +113,7 @@ function describe(
 ): string {
   switch (candidate.id) {
     case 'protect': {
-      const names = priorities.map((id) => CATEGORIES[id].label).join(', ') || 'your top lines';
+      const names = priorities.map((id) => CATEGORIES[id].label).join(', ');
       return `Keeps ${names} at the typical cost; the other lines share the cut.`;
     }
     case 'share':
@@ -134,7 +134,10 @@ function candidates(params: BudgetParams, current: BudgetPlan): Candidate[] {
   const base = params.settings;
   const formats = pickFormats(params, current);
   const list: Candidate[] = [
-    { id: 'protect', settings: { ...base, strategy: 'protect' }, formats: [] },
+    // Without priorities, "protect" would be the same as "share".
+    ...(params.priorities.length > 0
+      ? [{ id: 'protect', settings: { ...base, strategy: 'protect' }, formats: [] } as const]
+      : []),
     { id: 'share', settings: { ...base, strategy: 'share' }, formats: [] },
   ];
   if (formats.length > 0) {

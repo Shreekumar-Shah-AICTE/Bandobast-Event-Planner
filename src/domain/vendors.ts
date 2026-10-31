@@ -4,7 +4,7 @@
  */
 import type { CategoryId, EventProfile, VendorStatus } from '../../shared/schemas.js';
 import { CATEGORIES, DIET_LABELS, STYLE_LABELS, TAILORED_QUESTIONS } from './catalog.js';
-import { VENUE_HEADROOM } from './constants.js';
+import { VENUE_HEADROOM_PCT } from './constants.js';
 import { formatCompact, type Paise } from './money.js';
 
 export interface VendorCard {
@@ -44,7 +44,7 @@ const has = (profile: EventProfile, need: EventProfile['audience'][number]): boo
 
 function venueNeeds(profile: EventProfile): string[] {
   return [
-    `Seats at least ${String(Math.ceil(profile.guests * VENUE_HEADROOM))} guests`,
+    `Seats at least ${String(Math.ceil((profile.guests * VENUE_HEADROOM_PCT) / 100))} guests`,
     ...(has(profile, 'elders') ? ['Lift or ground-floor hall for elders'] : []),
     ...(has(profile, 'accessibility') ? ['Step-free entry and an accessible washroom'] : []),
     ...(has(profile, 'outstation') ? ['Rooms nearby for outstation guests'] : []),

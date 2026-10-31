@@ -8,6 +8,7 @@ import {
   RUPEES_PER_LAKH,
   RUPEES_PER_THOUSAND,
 } from './constants.js';
+import { at, field } from './access.js';
 
 /** An integer amount of paise. */
 export type Paise = number;
@@ -78,10 +79,10 @@ interface AmountMatch {
   readonly text: string;
 }
 
-function toMatch(groups: RegExpExecArray): AmountMatch | null {
-  const [text, marker, digits, unit] = groups;
-  if (digits === undefined) return null;
-  const multiplier = unit === undefined ? 1 : (UNIT_RUPEES[unit.toLowerCase()] ?? 1);
+function toMatch(groups: RegExpExecArray): AmountMatch {
+  const [text, marker, , unit] = groups;
+  const digits = at(groups, 2);
+  const multiplier = unit === undefined ? 1 : field(UNIT_RUPEES, unit.toLowerCase());
   const value = Number.parseFloat(digits.replaceAll(',', '')) * multiplier;
   return {
     paise: rupees(value),
@@ -92,12 +93,7 @@ function toMatch(groups: RegExpExecArray): AmountMatch | null {
 
 /** Every amount written in `text`, in order. O(n) in the text length. */
 export function findAmounts(text: string): readonly AmountMatch[] {
-  const found: AmountMatch[] = [];
-  for (const groups of text.matchAll(AMOUNT_RE)) {
-    const match = toMatch(groups);
-    if (match !== null) found.push(match);
-  }
-  return found;
+  return [...text.matchAll(AMOUNT_RE)].map(toMatch);
 }
 
 /**

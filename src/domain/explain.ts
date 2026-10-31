@@ -36,9 +36,14 @@ export function fillPlaceholders(
   const outside = text.replace(PLACEHOLDER_RE, '');
   if (/\d/u.test(outside)) return err('digits');
   if (/\{\{|\}\}/u.test(outside)) return err('unknown');
-  const keys = [...text.matchAll(PLACEHOLDER_RE)].map((match) => match[1] ?? '');
-  if (keys.some((key) => values[key] === undefined)) return err('unknown');
-  return ok(text.replace(PLACEHOLDER_RE, (_match, key: string) => values[key] ?? ''));
+  const filled: string[] = [];
+  // Splitting on a pattern with one group alternates text (even) and keys (odd).
+  for (const [index, part] of text.split(PLACEHOLDER_RE).entries()) {
+    const value = index % 2 === 0 ? part : values[part];
+    if (value === undefined) return err('unknown');
+    filled.push(value);
+  }
+  return ok(filled.join(''));
 }
 
 function biggestCut(scenario: Scenario): string | null {

@@ -9,6 +9,7 @@ import type {
   PlanInput,
   PlanVersion,
   Change,
+  Override,
 } from '../../shared/schemas.js';
 import { LIMITS } from '../../shared/limits.js';
 import { buildBudget, type BudgetParams, type BudgetPlan, type FixedLine } from './budget.js';
@@ -48,11 +49,7 @@ function fixedLines(
   analyses: readonly QuoteAnalysis[],
 ): Partial<Record<CategoryId, FixedLine>> {
   const fixed: Partial<Record<CategoryId, FixedLine>> = {};
-  for (const [category, override] of Object.entries(input.overrides) as [
-    CategoryId,
-    PlanInput['overrides'][CategoryId],
-  ][]) {
-    if (override === undefined) continue;
+  for (const [category, override] of Object.entries(input.overrides) as [CategoryId, Override][]) {
     if (override.kind !== 'quote') {
       fixed[category] = { amount: override.amountPaise, provenance: override.kind, quoteId: null };
       continue;

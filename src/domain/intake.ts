@@ -233,7 +233,7 @@ export const nextStep = (draft: IntakeDraft): IntakeStep | null =>
   INTAKE_STEPS.find((step) => draft[step] === undefined) ?? null;
 
 /** Defaults used when the user skips an optional question. */
-export const SKIP_DEFAULTS: Readonly<Partial<Record<IntakeStep, unknown>>> = {
+export const SKIP_DEFAULTS: Readonly<IntakeDraft> = {
   priorities: [],
   audience: [],
   diet: 'mixed',

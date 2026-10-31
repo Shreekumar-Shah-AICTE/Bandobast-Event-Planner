@@ -3,6 +3,7 @@
  * never depend on the device's time zone. Callers pass `today` explicitly.
  */
 import { MS_PER_DAY } from './constants.js';
+import { at, field } from './access.js';
 
 /** An ISO calendar date, `YYYY-MM-DD`. */
 export type IsoDate = string;
@@ -39,7 +40,7 @@ export const toDayNumber = (date: IsoDate): number => Date.parse(`${date}T00:00:
 
 /** Inverse of {@link toDayNumber}. O(1). */
 export const fromDayNumber = (day: number): IsoDate =>
-  new Date(day * MS_PER_DAY).toISOString().split('T')[0] ?? '';
+  new Date(day * MS_PER_DAY).toISOString().slice(0, 'YYYY-MM-DD'.length);
 
 /** `date` moved by `days` (negative = earlier). O(1). */
 export const addDays = (date: IsoDate, days: number): IsoDate =>
@@ -89,8 +90,8 @@ function withYear(
   return build(thisYear + 1, month, day);
 }
 
-function monthOf(name: string | undefined): number {
-  return MONTHS[(name ?? '').slice(0, 'mmm'.length).toLowerCase()] ?? 0;
+function monthOf(name: string): number {
+  return field(MONTHS, name.slice(0, 'mmm'.length).toLowerCase());
 }
 
 /**
@@ -101,9 +102,9 @@ export function parseDateText(text: string, today: IsoDate): IsoDate | null {
   const iso = ISO_RE.exec(text);
   if (iso) return build(Number(iso[1]), Number(iso[2]), Number(iso[3]));
   const dayMonth = DAY_MONTH_RE.exec(text);
-  if (dayMonth) return withYear(monthOf(dayMonth[2]), Number(dayMonth[1]), dayMonth[3], today);
+  if (dayMonth) return withYear(monthOf(at(dayMonth, 2)), Number(dayMonth[1]), dayMonth[3], today);
   const monthDay = MONTH_DAY_RE.exec(text);
-  if (monthDay) return withYear(monthOf(monthDay[1]), Number(monthDay[2]), monthDay[3], today);
+  if (monthDay) return withYear(monthOf(at(monthDay, 1)), Number(monthDay[2]), monthDay[3], today);
   const numeric = NUMERIC_RE.exec(text);
   if (numeric) return build(Number(numeric[3]), Number(numeric[2]), Number(numeric[1]));
   return null;

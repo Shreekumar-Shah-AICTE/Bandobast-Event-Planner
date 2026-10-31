@@ -12,6 +12,7 @@ import {
 } from './constants.js';
 import { rupees, sumPaise, type Paise } from './money.js';
 import type { CostModel, EventTemplate } from './templates/index.js';
+import { at } from './access.js';
 
 export type Provenance = 'estimate' | 'user' | 'quote' | 'booked';
 export type Feasibility = 'comfortable' | 'fits' | 'tight' | 'over';
@@ -117,10 +118,39 @@ export function feasibilityOf(gap: Paise, need: Paise): Feasibility {
 }
 
 function toMap(lines: readonly OpenLine[], steps: readonly number[]): Map<CategoryId, Paise> {
-  return new Map(lines.map((line, i) => [line.category, (steps[i] ?? 0) * ALLOCATION_STEP_PAISE]));
+  return new Map(lines.map((line, i) => [line.category, at(steps, i) * ALLOCATION_STEP_PAISE]));
 }
 
-/** Priorities at their typical cost, the rest shared; null when the priorities alone do not fit. */
+/**
+ * Splits `units` by `weights` without giving any line more than its cap; whatever a
+ * capped line cannot take flows to the others (water-filling). O(n² log n), n ≤ 13.
+ */
+export function cappedSplit(
+  units: number,
+  weights: readonly number[],
+  caps: readonly number[],
+): number[] {
+  const result = weights.map(() => 0);
+  let open = weights.map((_, index) => index);
+  let left = units;
+  while (open.length > 0) {
+    const split = largestRemainder(
+      left,
+      open.map((index) => at(weights, index)),
+    );
+    const over = open.filter((index, k) => at(split, k) > at(caps, index));
+    if (over.length === 0) {
+      open.forEach((index, k) => (result[index] = at(split, k)));
+      return result;
+    }
+    for (const index of over) result[index] = at(caps, index);
+    left -= sumPaise(over.map((index) => at(caps, index)));
+    open = open.filter((index) => !over.includes(index));
+  }
+  return result;
+}
+
+/** Priorities at their typical cost, the rest share the cut; null when the priorities alone do not fit. */
 function protectPriorities(
   open: readonly OpenLine[],
   units: number,
@@ -131,27 +161,42 @@ function protectPriorities(
   const keptTotal = keptSteps.reduce((a, b) => a + b, 0);
   if (keptTotal > units) return null;
   const others = open.filter((line) => !priorities.includes(line.category));
-  const otherSteps = largestRemainder(
+  const otherSteps = cappedSplit(
     units - keptTotal,
     others.map((line) => line.typical),
+    others.map((line) => toSteps(line.typical)),
   );
   return new Map([...toMap(kept, keptSteps), ...toMap(others, otherSteps)]);
 }
 
+/**
+ * Splits what is left for open lines. With enough money every line gets its typical
+ * cost and the extra leans to the priorities; in a shortfall no line gets more than
+ * typical: "protect" keeps priorities whole, "share" cuts every line by the same
+ * share, "balanced" cuts priorities less. O(c² log c).
+ */
 function allocateOpen(
   open: readonly OpenLine[],
   available: Paise,
   params: BudgetParams,
 ): Map<CategoryId, Paise> {
   const units = Math.floor(available / ALLOCATION_STEP_PAISE);
+  const typicalSteps = open.map((line) => toSteps(line.typical));
   const { strategy } = params.settings;
-  const protectedSplit =
-    strategy === 'protect' ? protectPriorities(open, units, params.priorities) : null;
-  if (protectedSplit !== null) return protectedSplit;
   const weights = open.map((line) =>
     strategy === 'share' ? line.typical : line.typical * tiltFor(line.category, params.priorities),
   );
-  return toMap(open, largestRemainder(units, weights));
+  const needed = typicalSteps.reduce((a, b) => a + b, 0);
+  if (units >= needed) {
+    const extra = largestRemainder(units - needed, weights);
+    return toMap(
+      open,
+      typicalSteps.map((steps, index) => steps + at(extra, index)),
+    );
+  }
+  const protectedSplit =
+    strategy === 'protect' ? protectPriorities(open, units, params.priorities) : null;
+  return protectedSplit ?? toMap(open, cappedSplit(units, weights, typicalSteps));
 }
 
 function typicalLines(params: BudgetParams): OpenLine[] {
@@ -177,7 +222,7 @@ function lineFor(line: OpenLine, fixed: FixedLine | undefined, planned: Paise): 
  */
 export function buildBudget(params: BudgetParams): BudgetPlan {
   const typical = typicalLines(params);
-  const fixedTotal = sumPaise(Object.values(params.fixed).map((line) => line.amount));
+  const fixedTotal = sumPaise(typical.map((line) => params.fixed[line.category]?.amount ?? 0));
   const open = typical.filter((line) => params.fixed[line.category] === undefined);
   const target =
     toSteps((params.total * params.template.contingencyPct) / 100) * ALLOCATION_STEP_PAISE;

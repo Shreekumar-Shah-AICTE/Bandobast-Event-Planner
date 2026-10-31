@@ -10,6 +10,7 @@ import { DAYS_PER_MONTH, DAYS_PER_WEEK, NUMBER_WORDS } from './constants.js';
 import { parseDateText, type IsoDate } from './dates.js';
 import { parseMoney, toRupees } from './money.js';
 import type { TaskTemplate } from './templates/index.js';
+import { at } from './access.js';
 
 export interface ParsedChanges {
   readonly changes: readonly Change[];
@@ -45,6 +46,9 @@ const SHIFT_VERB = new RegExp(
   String.raw`(prepone|bring forward|advance|postpone|push)\w*.*?${NUM}\s*${UNIT}`,
   'iu',
 );
+/** Capture groups of SHIFT ("2 weeks earlier") and SHIFT_VERB ("postpone by 2 weeks"). */
+const SHIFT_GROUP = { count: 1, unit: 2, direction: 3 } as const;
+const VERB_GROUP = { verb: 1, count: 2, unit: 3 } as const;
 const EARLIER = /^(earlier|sooner|before|pehle|jaldi|prepone|bring forward|advance)/iu;
 const EVENT_WORD = /\b(date|event|wedding|shaadi|party|function|celebration|it)\b/iu;
 const DELAY = /\b(delay\w*|late|slip\w*|push\w*|der|longer|extra)\b/iu;
@@ -53,8 +57,8 @@ const DONE = /\b(done|booked|finished|completed|sent|confirmed|ordered|fixed|ho 
 const toNumber = (token: string | undefined): number =>
   token === undefined ? Number.NaN : (NUMBER_WORDS[token.toLowerCase()] ?? Number(token));
 
-function daysOf(count: string | undefined, unit: string | undefined): number {
-  const u = (unit ?? '').toLowerCase();
+function daysOf(count: string, unit: string): number {
+  const u = unit.toLowerCase();
   const weeks = u.startsWith('w') || u.startsWith('h');
   const perUnit = weeks ? DAYS_PER_WEEK : u.startsWith('m') ? DAYS_PER_MONTH : 1;
   return toNumber(count) * perUnit;
@@ -94,17 +98,21 @@ function budgetChange(clause: string): Change | null {
 function shiftChange(clause: string): Change | null {
   const shift = SHIFT.exec(clause);
   if (shift) {
-    const days = daysOf(shift[1], shift[2]);
+    const days = daysOf(at(shift, SHIFT_GROUP.count), at(shift, SHIFT_GROUP.unit));
     return {
       kind: 'dateShift',
-      value: EARLIER.test(shift[3] ?? '') ? -days : days,
+      value: EARLIER.test(at(shift, SHIFT_GROUP.direction)) ? -days : days,
       evidence: clause,
     };
   }
   const verb = SHIFT_VERB.exec(clause);
   if (verb === null) return null;
-  const days = daysOf(verb[2], verb[3]);
-  return { kind: 'dateShift', value: EARLIER.test(verb[1] ?? '') ? -days : days, evidence: clause };
+  const days = daysOf(at(verb, VERB_GROUP.count), at(verb, VERB_GROUP.unit));
+  return {
+    kind: 'dateShift',
+    value: EARLIER.test(at(verb, VERB_GROUP.verb)) ? -days : days,
+    evidence: clause,
+  };
 }
 
 function dateChange(clause: string, today: IsoDate): Change | null {
@@ -129,7 +137,7 @@ function taskChange(clause: string, tasks: readonly TaskTemplate[]): Change | nu
   if (task === null) return null;
   const late = new RegExp(String.raw`${NUM}\s*${UNIT}`, 'iu').exec(clause);
   if (late && DELAY.test(clause)) {
-    const days = Math.min(LIMITS.maxDelayDays, daysOf(late[1], late[2]));
+    const days = Math.min(LIMITS.maxDelayDays, daysOf(at(late, 1), at(late, 2)));
     return days > 0 ? { kind: 'taskDelay', taskId: task.id, value: days, evidence: clause } : null;
   }
   return DONE.test(clause) ? { kind: 'taskDone', taskId: task.id, evidence: clause } : null;

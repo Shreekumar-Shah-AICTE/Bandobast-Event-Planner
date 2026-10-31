@@ -32,7 +32,7 @@ export const COMFORTABLE_SURPLUS_RATIO = 0.1;
 export const TIGHT_SLACK_DAYS = 3;
 
 /** Venue capacity rule of thumb: plan seating for 10% more than the expected guests. */
-export const VENUE_HEADROOM = 1.1;
+export const VENUE_HEADROOM_PCT = 110;
 
 /** GST slabs that commonly apply to catering and event services in India (verify with the vendor). */
 export const GST_LOW_PCT = 5;
