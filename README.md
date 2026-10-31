@@ -29,6 +29,8 @@
 2. Click the example **"50 more guests, budget down 10%, event 2 weeks earlier"**, or type your own, for example _"50 log zyada, budget 10% kam"_. Then click **Check what this changes**. You see the three changes it read, each with the words it came from, and you confirm them.
 3. The **What changed** report shows every budget line before and after, the reserve, the budget check (for example Fits → Over budget), tasks that became late, quote totals that changed, and up to three ways to rebalance, ranked by your own priorities. **Use this option** applies the fix to that same new version, so the change and its fix stay one step in History. **Undo this change** restores the old one.
 
+![The Change Test in 15 seconds: typing "50 log zyada, budget 10% kam, shaadi 2 hafte pehle" into the Something changed? box, the three changes it read, each with the words it came from (guests 200 to 250, budget ₹12 lakh to ₹10.8 lakh, the event 14 days earlier), then Apply 3 changes and the What changed report.](docs/images/change-test.gif)
+
 | What changed | Budget | Timeline |
 | --- | --- | --- |
 | ![The What changed report after the Hinglish change: guests 200 to 250, budget ₹12 lakh to ₹10.8 lakh, the event two weeks earlier, the budget check going from Fits to Over budget, and every budget line before and after.](docs/images/report.png) | ![The Budget tab: a coloured bar of where the money goes, the reserve for surprises, the budget check, and each line labelled Estimate with a Set my number button.](docs/images/budget.png) | ![The Timeline tab: tasks on a rail with Late and On track badges, ways to catch up, Shorten it buttons, Add to Google Calendar links and a form to add your own task.](docs/images/timeline.png) |
