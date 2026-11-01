@@ -51,6 +51,8 @@ export interface BudgetPlan {
 export interface BudgetParams {
   readonly total: Paise;
   readonly guests: number;
+  /** Price level of the event's city against metro prices (see cityCost.ts); 1 = metro. */
+  readonly cityFactor: number;
   readonly template: EventTemplate;
   readonly priorities: readonly CategoryId[];
   readonly settings: Settings;
@@ -64,7 +66,7 @@ interface OpenLine {
 
 const toSteps = (amount: Paise): number => Math.round(amount / ALLOCATION_STEP_PAISE);
 
-/** Typical cost `fixed + perGuest × guests`, scaled by a format multiplier. O(1). */
+/** Typical cost `fixed + perGuest × guests`, scaled by the format and city multipliers. O(1). */
 export function typicalCost(cost: CostModel, guests: number, multiplier = 1): Paise {
   return rupees(Math.round((cost.fixed + cost.perGuest * guests) * multiplier));
 }
@@ -205,7 +207,7 @@ function typicalLines(params: BudgetParams): OpenLine[] {
     typical: typicalCost(
       entry.cost,
       params.guests,
-      formatMultiplier(params.template, params.settings.formats, entry.id),
+      formatMultiplier(params.template, params.settings.formats, entry.id) * params.cityFactor,
     ),
   }));
 }

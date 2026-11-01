@@ -1,4 +1,5 @@
 /** Budget tab: totals, every line with where its number came from, and rebalance options. */
+import { describeCityPricing } from '../../domain/cityCost.js';
 import { formatInr, sumPaise } from '../../domain/money.js';
 import { plural } from '../common/format.js';
 import { FeasibilityBadge } from '../common/Labels.js';
@@ -36,7 +37,7 @@ export function BudgetPanel({ controls }: { readonly controls: PlanControls }) {
       </dl>
       <BudgetBar budget={budget} />
       <p className="hint">
-        {`Typical costs are mid-range assumptions for ${plural(plan.input.profile.guests, 'guest')}, not quotes. Replace them with your own number or a checked quote.`}
+        {`Typical costs are mid-range assumptions for ${plural(plan.input.profile.guests, 'guest')}, ${describeCityPricing(plan.input.profile.city)}. They are not quotes: replace them with your own number or a checked quote.`}
       </p>
       <BudgetTable controls={controls} />
       <section aria-labelledby="options-title">

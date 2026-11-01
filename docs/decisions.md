@@ -33,3 +33,7 @@ There are no accounts and no server database, so there are no personal data to b
 ## 8. A small dependency set
 
 The app uses React, zod, the Gemini SDK and the Upstash clients, with no UI framework or state library. The production JavaScript is about 136 kB gzipped.
+
+## 9. Estimates follow the city's price level
+
+The typical costs are mid-range metro prices. A wedding in Jaipur or a smaller town costs less, so estimates scale by city class, after the X/Y/Z classes India uses for house-rent allowance: metros ×1, large cities ×0.85, everywhere else ×0.7, with NCR and Mumbai-region suburbs counted as their metro. The factors are rough planning assumptions, stated in the budget note. **Cost:** two towns in the same class get the same estimate; your own numbers and quotes are never scaled.

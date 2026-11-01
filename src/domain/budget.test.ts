@@ -25,6 +25,7 @@ function weddingParams(overrides: Partial<BudgetParams> = {}): BudgetParams {
   return {
     total: profile.budgetPaise,
     guests: profile.guests,
+    cityFactor: 1,
     template: WEDDING,
     priorities: profile.priorities,
     settings: { strategy: 'balanced', formats: [], useContingency: false },
@@ -197,6 +198,7 @@ describe('Budget: invariants for any event, total, guest count and fixed lines',
       return {
         total: rupees(draw.totalRupees),
         guests: draw.guests,
+        cityFactor: 1,
         template,
         priorities: ids.slice(0, draw.priorityCount),
         settings: { strategy: draw.strategy, formats: [], useContingency: draw.useContingency },
