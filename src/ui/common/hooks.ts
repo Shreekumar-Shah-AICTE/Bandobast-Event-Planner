@@ -51,15 +51,11 @@ export function useAsk<T>(): Ask<T> {
       const signal = fresh();
       setBusy(true);
       setResult(null);
-      try {
-        const value = await task(signal);
-        if (signal.aborted) return null;
-        setResult(value);
-        return value;
-      } finally {
-        // A newer request (or clear) owns the busy flag once this one is cancelled.
-        if (!signal.aborted) setBusy(false);
-      }
+      const value = await task(signal);
+      if (signal.aborted) return null;
+      setBusy(false);
+      setResult(value);
+      return value;
     },
     [fresh],
   );

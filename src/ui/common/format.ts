@@ -2,7 +2,6 @@
 import { EVENT_TYPES, type CostLevel, type EventType } from '../../../shared/schemas.js';
 import { templateFor } from '../../domain/templates/index.js';
 
-/** The display name of each event type, from its template. */
 export const EVENT_LABELS = Object.fromEntries(
   EVENT_TYPES.map((type) => [type, templateFor(type).label]),
 ) as Readonly<Record<EventType, string>>;

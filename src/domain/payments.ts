@@ -15,14 +15,12 @@ import { isIsoDate, type IsoDate } from './dates.js';
 import { parseMoney, sumPaise, type Paise } from './money.js';
 import { err, ok, type Result } from './result.js';
 
-/** A payment's state on a given day. */
 export type PaymentState = 'paid' | 'overdue' | 'due';
 
 /** Paid once `paidOn` is set; otherwise overdue after its due date. ISO dates sort as text. O(1). */
 export const paymentState = (payment: Payment, today: IsoDate): PaymentState =>
   payment.paidOn !== undefined ? 'paid' : payment.dueOn < today ? 'overdue' : 'due';
 
-/** One vendor's payments with the amounts paid, due, overdue, not yet scheduled and in excess. */
 export interface VendorPayments {
   /** Soonest due first. */
   readonly payments: readonly Payment[];
@@ -36,7 +34,6 @@ export interface VendorPayments {
   readonly excess: Paise;
 }
 
-/** Payment totals across all vendors, the next payment due, and each vendor's details. */
 export interface PaymentSummary {
   readonly paid: Paise;
   readonly due: Paise;
@@ -82,7 +79,6 @@ export function summarisePayments(
   return { paid: all.paid, due: all.due, overdue: all.overdue, next, vendors };
 }
 
-/** A payment as typed in the form, before it is parsed and checked. */
 export interface PaymentDraft {
   readonly category: CategoryId;
   readonly label: string;

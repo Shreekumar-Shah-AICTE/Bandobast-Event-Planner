@@ -15,7 +15,6 @@ interface ReportProps {
 export const fromTo = (before: string, after: string): string =>
   before === after ? `${after} (unchanged)` : `${before} → ${after}`;
 
-/** Report section: guests, budget, date, reserve and the budget check, before and after. */
 export function ProfileChanges({ report }: ReportProps) {
   const { guests, budget, eventDate, feasibility, contingency } = report;
   return (
@@ -48,9 +47,6 @@ export function ProfileChanges({ report }: ReportProps) {
   );
 }
 
-/**
- * Report section: every budget line before and after, and the fixed lines the change left alone.
- */
 export function LineChanges({ report }: ReportProps) {
   if (report.lines.length === 0 && report.untouched.length === 0) return null;
   return (
@@ -97,7 +93,6 @@ interface TaskChangesProps extends ReportProps {
   readonly onShorten: (taskId: string) => void;
 }
 
-/** Report section: tasks that became late or tight, or recovered, with ways to shorten them. */
 export function TaskChanges({ report, tips, onShorten }: TaskChangesProps) {
   const { newlyLate, newlyTight, recovered } = report;
   return (
@@ -156,7 +151,6 @@ function LateTask({ title, tip, onShorten }: LateTaskProps) {
   );
 }
 
-/** Report section: quote totals that moved. */
 export function QuoteChanges({ report }: ReportProps) {
   if (report.quotes.length === 0) return null;
   return (

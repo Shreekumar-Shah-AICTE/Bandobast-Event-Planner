@@ -8,7 +8,6 @@ import { listText } from '../common/format.js';
 import { useAsk } from '../common/hooks.js';
 import { SourceNote } from '../common/Labels.js';
 
-/** How each intake field is named when reporting what was read. */
 export const STEP_LABELS: Readonly<Record<IntakeStep, string>> = {
   eventType: 'kind of event',
   title: 'name',
@@ -35,9 +34,6 @@ interface DescribeBoxProps {
   readonly onRead: (draft: IntakeDraft) => void;
 }
 
-/**
- * "Describe it in your own words": reads a free-text description and fills in the form for review.
- */
 export function DescribeBox({ today, onRead }: DescribeBoxProps) {
   const [text, setText] = useState('');
   const ask = useAsk<Reading<IntakeDraft>>();

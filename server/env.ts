@@ -21,10 +21,6 @@ const EnvSchema = z.object({
   RATE_LIMIT_SALT: optional,
 });
 
-/**
- * Settings read from the function's environment. A missing key or store is null, and the function
- * then answers 503 so the browser uses its rules.
- */
 export interface ServerEnv {
   readonly geminiApiKey: string | null;
   readonly models: readonly string[];

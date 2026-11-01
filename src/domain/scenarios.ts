@@ -10,15 +10,9 @@ import { CONTINGENCY_PAIN, DEFAULT_PAIN, PRIORITY_PAIN } from './constants.js';
 import { formatCompact, sumPaise, type Paise } from './money.js';
 import type { FormatOption } from './templates/index.js';
 
-/**
- * The four ways to rebalance: protect the priorities, share the cut, change the format, or use the
- * reserve.
- */
 export type ScenarioId = 'protect' | 'share' | 'format' | 'contingency';
-/** How much a rebalance option asks of the hosts. */
 export type PainLevel = 'low' | 'medium' | 'high';
 
-/** One ranked way to rebalance: its settings, the budget they produce and how much it hurts. */
 export interface Scenario {
   readonly id: ScenarioId;
   readonly label: string;

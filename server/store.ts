@@ -7,10 +7,6 @@ import { Ratelimit } from '@upstash/ratelimit';
 import type { Redis } from '@upstash/redis';
 import { SERVER_CONFIG } from './config.js';
 
-/**
- * The limiter's verdict for one request: allowed or not, which limit decided, and that limit's
- * size.
- */
 export interface LimitDecision {
   readonly allowed: boolean;
   readonly reason: 'ok' | 'client' | 'client-daily' | 'daily' | 'unavailable';
@@ -20,12 +16,10 @@ export interface LimitDecision {
   readonly resetMs: number;
 }
 
-/** Checks one client's request against the rate limits kept in the shared store. */
 export interface Limiter {
   check(clientKey: string): Promise<LimitDecision>;
 }
 
-/** Checked answers kept for 24 hours, keyed by a one-way hash of the request. */
 export interface AnswerCache {
   get(key: string): Promise<unknown>;
   set(key: string, value: unknown): Promise<void>;
@@ -48,14 +42,6 @@ async function decide(limiter: Ratelimit, key: string): Promise<Window | null> {
   return result.reason === 'timeout' ? null : result;
 }
 
-const allow = (window: Window): LimitDecision => ({
-  allowed: true,
-  reason: 'ok',
-  limit: window.limit,
-  remaining: window.remaining,
-  resetMs: window.reset,
-});
-
 const deny = (reason: LimitDecision['reason'], window: Window): LimitDecision => ({
   allowed: false,
   reason,
@@ -63,14 +49,6 @@ const deny = (reason: LimitDecision['reason'], window: Window): LimitDecision =>
   remaining: 0,
   resetMs: window.reset,
 });
-
-/**
- * The limits each AI request passes, in this order, one Redis round trip each. The
- * cheapest refusal comes first, so a client over its own limit never uses up the
- * whole app's daily ceiling. `server/timing.test.ts` budgets one timeout per check.
- */
-export const LIMIT_CHECKS = ['client', 'client-daily', 'daily'] as const;
-type LimitCheck = (typeof LIMIT_CHECKS)[number];
 
 /** Per-client, per-client daily and whole-app daily limits in Redis (no in-memory state). O(1) round trips. */
 export function upstashLimiter(redis: Redis): Limiter {
@@ -96,24 +74,20 @@ export function upstashLimiter(redis: Redis): Limiter {
     prefix: `${keyPrefix}:rl:daily`,
     limiter: Ratelimit.fixedWindow(dailyLimit.requests, dailyLimit.window),
   });
-  const limiters: Record<LimitCheck, Ratelimit> = {
-    client: perClient,
-    'client-daily': perClientDaily,
-    daily,
-  };
   return {
     async check(clientKey) {
       try {
-        let decision = UNAVAILABLE;
-        // In order, on purpose: a refused check must not use up the later limits.
-        for (const name of LIMIT_CHECKS) {
-          const window = await decide(limiters[name], name === 'daily' ? 'all' : clientKey);
-          if (window === null) return UNAVAILABLE;
-          if (!window.success) return deny(name, window);
-          // The client's own window is what the response headers report.
-          if (name === 'client') decision = allow(window);
-        }
-        return decision;
+        const client = await decide(perClient, clientKey);
+        if (client === null) return UNAVAILABLE;
+        if (!client.success) return deny('client', client);
+        const clientDay = await decide(perClientDaily, clientKey);
+        if (clientDay === null) return UNAVAILABLE;
+        if (!clientDay.success) return deny('client-daily', clientDay);
+        const app = await decide(daily, 'all');
+        if (app === null) return UNAVAILABLE;
+        if (!app.success) return deny('daily', app);
+        const { limit, remaining, reset } = client;
+        return { allowed: true, reason: 'ok', limit, remaining, resetMs: reset };
       } catch {
         return UNAVAILABLE;
       }

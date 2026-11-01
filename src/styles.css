@@ -891,13 +891,6 @@ details summary {
   align-items: center;
 }
 
-/* Links that stand on their own line get the same 44px target as buttons (WCAG 2.5.8). */
-.target-link {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-}
-
 @media (max-width: 40rem) {
   .hero,
   .plan-header {

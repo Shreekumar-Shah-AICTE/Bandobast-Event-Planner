@@ -11,10 +11,8 @@ import { rupees } from './domain/money.js';
 export const SAMPLE_LEAD_DAYS = 110;
 const SAMPLE_BUDGET_RUPEES = 1_200_000;
 
-/** The example change offered first on the plan screen. */
 export const SAMPLE_CHANGE = '50 more guests, budget down 10%, event 2 weeks earlier';
 
-/** The sample wedding (Riya & Arjun, Pune, 200 guests), set `SAMPLE_LEAD_DAYS` after `today`. */
 export function sampleProfile(today: IsoDate): EventProfile {
   return {
     eventType: 'wedding',

@@ -16,7 +16,6 @@ import { addQuote } from './quoteEdits.js';
 
 type QuoteReading = Reading<QuoteDraft> & { readonly text: string };
 
-/** "Check a quote": paste a vendor's message, review what was read, then save it to the plan. */
 export function QuoteReader({ controls }: { readonly controls: PlanControls }) {
   const { plan, today } = controls;
   const categories = plan.budget.lines.map((line) => line.category);

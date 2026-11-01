@@ -8,7 +8,6 @@ import { GST_HIGH_PCT, GST_LOW_PCT } from './constants.js';
 import { amountAppears } from './grounding.js';
 import { applyPercent, rupees, sumPaise, type Paise } from './money.js';
 
-/** One quote line: whether its amount is in the pasted text, the quantity charged and its total. */
 export interface AnalysedItem {
   readonly item: QuoteItem;
   readonly verified: boolean;
@@ -16,10 +15,6 @@ export interface AnalysedItem {
   readonly total: Paise;
 }
 
-/**
- * A quote worked out for this event: plates charged, a best-case and worst-case total, and the
- * lines that need a question.
- */
 export interface QuoteAnalysis {
   readonly quote: Quote;
   readonly items: readonly AnalysedItem[];
@@ -37,7 +32,6 @@ export interface QuoteAnalysis {
   readonly clarifications: readonly string[];
 }
 
-/** A percentage charged on top, with the line it came from. */
 export interface Surcharge {
   readonly line: string;
   readonly pct: number;
@@ -151,10 +145,6 @@ export function analyseQuote(quote: Quote, guests: number): QuoteAnalysis {
   };
 }
 
-/**
- * The quotes for one category side by side, with the lowest worst-case total among the fully
- * verified ones.
- */
 export interface QuoteComparison {
   readonly category: CategoryId;
   readonly rows: readonly QuoteAnalysis[];

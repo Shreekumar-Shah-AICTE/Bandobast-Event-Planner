@@ -17,10 +17,6 @@ interface DashboardProps {
   readonly today: IsoDate;
 }
 
-/**
- * The plan screen: builds the plan for the version on screen and shows the header, the change box,
- * the report and the tabs.
- */
 export function Dashboard({ state, version, dispatch, today }: DashboardProps) {
   const plan = useMemo(() => buildPlan(version.input, today), [version.input, today]);
   const controls = useMemo<PlanControls>(

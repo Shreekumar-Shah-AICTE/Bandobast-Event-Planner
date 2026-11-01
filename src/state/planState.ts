@@ -7,7 +7,6 @@ import type { IsoDate } from '../domain/dates.js';
 import { addVersion, firstVersion } from '../domain/plan.js';
 import type { Persisted } from '../domain/storage.js';
 
-/** All versions, the one on screen, and the impact report to show, if any. */
 export interface PlanState {
   readonly versions: readonly PlanVersion[];
   /** Version number on screen. */
@@ -16,10 +15,8 @@ export interface PlanState {
   readonly report: { readonly from: number; readonly to: number } | null;
 }
 
-/** The state before any plan exists. */
 export const EMPTY_STATE: PlanState = { versions: [], current: 0, report: null };
 
-/** The reducer's actions. A commit adds a version; an edit updates the one on screen. */
 export type PlanAction =
   | { readonly type: 'start'; readonly profile: EventProfile; readonly today: IsoDate }
   | {

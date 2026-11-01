@@ -7,10 +7,6 @@ import { CATEGORIES, DIET_LABELS, STYLE_LABELS, TAILORED_QUESTIONS } from './cat
 import { VENUE_HEADROOM_PCT } from './constants.js';
 import { formatCompact, type Paise } from './money.js';
 
-/**
- * Everything one vendor card shows: status, what to ask for, questions, the planned amount and the
- * number of quotes.
- */
 export interface VendorCard {
   readonly category: CategoryId;
   readonly label: string;
@@ -29,7 +25,6 @@ const TRANSITIONS: Readonly<Record<VendorStatus, readonly VendorStatus[]>> = {
   booked: ['quoted'],
 };
 
-/** Words shown for each vendor status. */
 export const STATUS_LABELS: Readonly<Record<VendorStatus, string>> = {
   todo: 'To contact',
   contacted: 'Contacted',

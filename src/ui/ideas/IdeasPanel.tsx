@@ -8,7 +8,6 @@ import { costText } from '../common/format.js';
 import { useAsk } from '../common/hooks.js';
 import { SourceNote } from '../common/Labels.js';
 
-/** Words for each way to steer the ideas. */
 export const REFINEMENT_LABELS: Readonly<Record<Refinement, string>> = {
   cheaper: 'Cheaper',
   traditional: 'More traditional',
@@ -19,10 +18,6 @@ export const REFINEMENT_LABELS: Readonly<Record<Refinement, string>> = {
 
 const SHOWN = 8;
 
-/**
- * The Ideas tab: library ideas ranked for the guests, steering buttons, and fresh ideas from
- * Gemini.
- */
 export function IdeasPanel({ profile }: { readonly profile: EventProfile }) {
   const [refinement, setRefinement] = useState<Refinement | null>(null);
   const [extra, setExtra] = useState<readonly Idea[]>([]);

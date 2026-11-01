@@ -10,19 +10,16 @@ import type { Paise } from './money.js';
 import type { Plan } from './plan.js';
 import type { TaskStatus } from './timeline.js';
 
-/** A value before and after a change. */
 export interface Delta<T> {
   readonly before: T;
   readonly after: T;
 }
 
-/** A budget line whose amount moved, with the label of its new amount. */
 export interface LineDelta extends Delta<Paise> {
   readonly category: CategoryId;
   readonly provenance: Provenance;
 }
 
-/** A task whose status, slack or due date moved. */
 export interface TaskDelta {
   readonly id: string;
   readonly title: string;
@@ -31,16 +28,11 @@ export interface TaskDelta {
   readonly due: Delta<IsoDate>;
 }
 
-/** A quote whose total moved, for example after a guest change. */
 export interface QuoteDelta extends Delta<Paise> {
   readonly id: string;
   readonly vendorName: string;
 }
 
-/**
- * Everything one change moved: guests, budget and date (null when unchanged), budget lines, the
- * reserve, the budget check, tasks that became late, tight or recovered, and quote totals.
- */
 export interface ImpactReport {
   readonly guests: Delta<number> | null;
   readonly budget: Delta<Paise> | null;

@@ -26,12 +26,9 @@ const UNIT_RUPEES: Readonly<Record<string, number>> = {
   crores: RUPEES_PER_CRORE,
 };
 
-/**
- * Number with optional currency marker, Indian unit and rupee suffix ("850/-", "850 rupees").
- * Groups: 1 marker, 2 number, 3 unit, 4 suffix.
- */
+/** Number with optional currency marker and Indian unit suffix. Groups: 1 marker, 2 number, 3 unit. */
 const AMOUNT_RE =
-  /(₹|\brs\.?|\binr)?\s*(\d{1,3}(?:,\d{2,3})+(?:\.\d+)?|\d+(?:\.\d+)?)\s*(k|thousand|lakhs?|lacs?|l|crores?|cr)?\b(\s*(?:\/-|rupees?\b|rs\b\.?|inr\b))?/giu;
+  /(₹|\brs\.?|\binr)?\s*(\d{1,3}(?:,\d{2,3})+(?:\.\d+)?|\d+(?:\.\d+)?)\s*(k|thousand|lakhs?|lacs?|l|crores?|cr)?\b/giu;
 
 const wholeRupees = new Intl.NumberFormat('en-IN', {
   style: 'currency',
@@ -76,27 +73,21 @@ export function formatDelta(amount: Paise): string {
   return `${amount > 0 ? '+' : '−'}${formatInr(Math.abs(amount))}`;
 }
 
-/** An amount found in text, in paise, and whether it is marked as money. */
-export interface AmountMatch {
+interface AmountMatch {
   readonly paise: Paise;
-  /** Carries a currency marker, unit or rupee suffix, so it is money, not a count. */
   readonly marked: boolean;
   readonly text: string;
-  /** Where `text` starts in the searched string. */
-  readonly index: number;
 }
 
 function toMatch(groups: RegExpExecArray): AmountMatch {
-  const [raw, marker, , unit, suffix] = groups;
+  const [text, marker, , unit] = groups;
   const digits = at(groups, 2);
   const multiplier = unit === undefined ? 1 : field(UNIT_RUPEES, unit.toLowerCase());
   const value = Number.parseFloat(digits.replaceAll(',', '')) * multiplier;
-  const text = raw.trim();
   return {
     paise: rupees(value),
-    marked: marker !== undefined || unit !== undefined || suffix !== undefined,
-    text,
-    index: groups.index + raw.indexOf(text),
+    marked: marker !== undefined || unit !== undefined,
+    text: text.trim(),
   };
 }
 

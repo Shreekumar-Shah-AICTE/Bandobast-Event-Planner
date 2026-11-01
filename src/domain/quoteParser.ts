@@ -4,7 +4,7 @@
  */
 import type { CategoryId, QuoteDraft, QuoteItem } from '../../shared/schemas.js';
 import { LIMITS } from '../../shared/limits.js';
-import { findAmounts, toRupees, type AmountMatch } from './money.js';
+import { findAmounts, toRupees } from './money.js';
 
 const PER_GUEST_RE = /(per\s*(plate|head|person|guest|pax)|\/\s*(plate|head|person|pax)|\bpp\b)/iu;
 const PER_HOUR_RE = /(per\s*hour|\/\s*hr|\/\s*hour|hourly)/iu;
@@ -34,38 +34,9 @@ function labelOf(line: string, amountText: string): string {
   return (label.length > 0 ? label : 'Quoted amount').slice(0, MAX_LABEL);
 }
 
-const UNIT_PHRASES = [PER_GUEST_RE, PER_HOUR_RE, PER_DAY_RE, PER_PIECE_RE];
-/** Smaller bare numbers next to "per plate" are counts ("2 per table"), not prices. */
-const MIN_BARE_RUPEES = 10;
-
-/**
- * For WhatsApp-style lines without ₹ or Rs ("Veg thali 850 per plate"): the bare
- * number written closest to the unit phrase. Percentages never count. O(n).
- */
-function bareUnitPrice(line: string): AmountMatch | undefined {
-  const phrase = UNIT_PHRASES.map((re) => re.exec(line)).find((match) => match !== null);
-  if (!phrase) return undefined;
-  const start = phrase.index;
-  const end = start + phrase[0].length;
-  const gap = (m: AmountMatch): number => {
-    const after = m.index + m.text.length;
-    if (after <= start) return start - after;
-    return m.index >= end ? m.index - end : Number.POSITIVE_INFINITY;
-  };
-  const candidates = findAmounts(line).filter(
-    (m) =>
-      toRupees(m.paise) >= MIN_BARE_RUPEES &&
-      !line
-        .slice(m.index + m.text.length)
-        .trimStart()
-        .startsWith('%'),
-  );
-  return candidates.sort((a, b) => gap(a) - gap(b))[0];
-}
-
 function itemFrom(line: string): QuoteItem | null {
   if (GST_RATE_RE.test(line) && findAmounts(line).every((m) => !m.marked)) return null;
-  const amount = findAmounts(line).find((m) => m.marked) ?? bareUnitPrice(line);
+  const amount = findAmounts(line).find((m) => m.marked);
   if (amount === undefined || amount.paise <= 0) return null;
   return {
     label: labelOf(line, amount.text),
@@ -84,19 +55,8 @@ function gstOf(text: string): Pick<QuoteDraft, 'gst' | 'gstRatePct'> {
   return { gst: 'unknown' };
 }
 
-/** Terms lines, not names: minimums, percentages and tax notes. */
-function isTermsLine(line: string): boolean {
-  return MIN_GUARANTEE_RE.test(line) || /%|\bgst\b|\btax/iu.test(line);
-}
-
 function vendorOf(lines: readonly string[]): string {
-  const first = lines.find(
-    (line) =>
-      line.length > 0 &&
-      itemFrom(line) === null &&
-      findAmounts(line).every((m) => !m.marked) &&
-      !isTermsLine(line),
-  );
+  const first = lines.find((line) => line.length > 0 && findAmounts(line).every((m) => !m.marked));
   return (first ?? 'Vendor quote').slice(0, MAX_LABEL);
 }
 

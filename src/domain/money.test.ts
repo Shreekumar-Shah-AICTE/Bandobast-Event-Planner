@@ -40,15 +40,6 @@ describe('Budget: money in paise', () => {
     expect(parseMoney('INR 5000')).toBe(rupees(5000));
   });
 
-  it('reads the rupee suffixes used in Indian quotes: "/-", "rupees" and "Rs"', () => {
-    expect(parseMoney('Decoration 45,000/-')).toBe(rupees(45_000));
-    expect(parseMoney('Mehendi 6000 rupees')).toBe(rupees(6000));
-    expect(parseMoney('Band 15000 Rs only')).toBe(rupees(15_000));
-    expect(findAmounts('Tent 3,500/- per day').map((m) => [m.text, m.index])).toEqual([
-      ['3,500/-', 5],
-    ]);
-  });
-
   it('ignores bare numbers so "200 guests" is never money', () => {
     expect(parseMoney('200 guests on 12 Feb')).toBeNull();
     expect(findAmounts('200 guests, ₹850 per plate').map((m) => m.marked)).toEqual([false, true]);

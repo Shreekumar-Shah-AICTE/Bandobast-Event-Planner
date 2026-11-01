@@ -19,9 +19,7 @@ import { parseMoney, rupees } from './money.js';
 import { templateFor } from './templates/index.js';
 
 const DraftSchema = EventProfileSchema.partial();
-/** The profile fields the intake reader could fill in. */
 export type IntakeDraft = z.infer<typeof DraftSchema>;
-/** The profile fields the intake reader can fill, in the order it reports them. */
 export const INTAKE_STEPS = [
   'eventType',
   'title',
@@ -34,7 +32,6 @@ export const INTAKE_STEPS = [
   'diet',
   'style',
 ] as const;
-/** One of the intake fields. */
 export type IntakeStep = (typeof INTAKE_STEPS)[number];
 
 const EVENT_RE: readonly (readonly [EventType, RegExp])[] = [

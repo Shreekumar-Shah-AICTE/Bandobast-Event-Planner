@@ -5,10 +5,6 @@
 import { z } from 'zod';
 import { LIMITS } from './limits.js';
 
-/**
- * The fixed vocabularies of a plan. Each list feeds a zod schema, and through it a type at the end
- * of this file.
- */
 export const EVENT_TYPES = ['wedding', 'birthday', 'anniversary', 'community'] as const;
 export const CATEGORY_IDS = [
   'venue',
@@ -34,14 +30,11 @@ export const QUOTE_UNITS = ['perGuest', 'fixed', 'perHour', 'perDay', 'perPiece'
 export const GST_MODES = ['included', 'extra', 'unknown'] as const;
 /** Relative cost of an idea, never a price: 1 = ₹, 2 = ₹₹, 3 = ₹₹₹. */
 export const COST_LEVELS = { low: 1, medium: 2, high: 3 } as const;
-/** Accepts only the three cost levels. */
 export const CostLevelSchema = z.literal([COST_LEVELS.low, COST_LEVELS.medium, COST_LEVELS.high]);
-/** Tags that match ideas to the guests and the style. */
 export const IDEA_TAGS = ['elders', 'kids', 'eco', 'traditional', 'modern', 'accessible'] as const;
 /** Ways to steer the idea list ("cheaper", "more traditional", …). */
 export const REFINEMENTS = ['cheaper', 'traditional', 'kids', 'elders', 'eco'] as const;
 
-/** Schemas for the vocabularies above, and for ISO calendar dates (YYYY-MM-DD). */
 export const EventTypeSchema = z.enum(EVENT_TYPES);
 export const CategoryIdSchema = z.enum(CATEGORY_IDS);
 export const DietSchema = z.enum(DIETS);
@@ -54,10 +47,6 @@ const paise = z
   .max(LIMITS.maxBudgetRupees * 100);
 const evidence = z.string().trim().min(1).max(LIMITS.maxChangeTextLength);
 
-/**
- * The event as the user describes it: type, title, city, date, guests, budget, priorities, diet,
- * audience and style.
- */
 export const EventProfileSchema = z.object({
   eventType: EventTypeSchema,
   title: z.string().trim().min(1).max(LIMITS.maxTitleLength),
@@ -74,10 +63,6 @@ export const EventProfileSchema = z.object({
   style: StyleSchema,
 });
 
-/**
- * A budget line the user fixed: their own number, a booked amount, or a saved quote (booked or
- * not).
- */
 export const OverrideSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('user'), amountPaise: paise }),
   z.object({ kind: z.literal('booked'), amountPaise: paise }),
@@ -88,9 +73,6 @@ export const OverrideSchema = z.discriminatedUnion('kind', [
   }),
 ]);
 
-/**
- * The user's progress on one task: done (and when), days of delay, and whether it was shortened.
- */
 export const TaskStateSchema = z.object({
   done: z.boolean(),
   doneOn: IsoDateSchema.optional(),
@@ -99,7 +81,6 @@ export const TaskStateSchema = z.object({
   compressed: z.boolean(),
 });
 
-/** One priced line of a quote, in rupees as written, with its unit and an optional quantity. */
 export const QuoteItemSchema = z.object({
   label: z.string().trim().min(1).max(LIMITS.maxTitleLength),
   unit: z.enum(QUOTE_UNITS),
@@ -107,7 +88,6 @@ export const QuoteItemSchema = z.object({
   quantity: z.int().min(1).max(LIMITS.maxGuests).optional(),
 });
 
-/** A quote read from pasted text, before it is saved to the plan. */
 export const QuoteDraftSchema = z.object({
   vendorName: z
     .string()
@@ -122,7 +102,6 @@ export const QuoteDraftSchema = z.object({
   notes: z.array(z.string().trim().max(LIMITS.maxShortText)).max(LIMITS.maxIdeas),
 });
 
-/** A saved quote: the draft plus its id, the pasted text and the day it was added. */
 export const QuoteSchema = QuoteDraftSchema.extend({
   id: z.string().min(1).max(LIMITS.maxIdLength),
   sourceText: z.string().max(LIMITS.maxQuoteTextLength),
@@ -149,14 +128,12 @@ export const CustomTaskSchema = z.object({
   daysBefore: z.int().min(-LIMITS.maxDaysAfterEvent).max(LIMITS.maxDaysBeforeEvent),
 });
 
-/** Budget settings: the split strategy, the format options chosen and the reserve switch. */
 export const SettingsSchema = z.object({
   strategy: z.enum(STRATEGIES),
   formats: z.array(z.string().min(1).max(LIMITS.maxIdLength)).max(LIMITS.maxIdeas),
   useContingency: z.boolean(),
 });
 
-/** Everything the user decided. A version stores only this, and `buildPlan` derives the rest. */
 export const PlanInputSchema = z.object({
   profile: EventProfileSchema,
   overrides: z.partialRecord(CategoryIdSchema, OverrideSchema),
@@ -169,10 +146,6 @@ export const PlanInputSchema = z.object({
   settings: SettingsSchema,
 });
 
-/**
- * One confirmed change (guests, budget, a date shift or a new date, a task delayed or done), with
- * the words it came from.
- */
 export const ChangeSchema = z.discriminatedUnion('kind', [
   z.object({
     kind: z.literal('guests'),
@@ -205,7 +178,6 @@ export const ChangeSchema = z.discriminatedUnion('kind', [
   }),
 ]);
 
-/** One saved version: its number, day, label, inputs and the changes that made it. */
 export const PlanVersionSchema = z.object({
   version: z.int().min(1),
   createdOn: IsoDateSchema,
@@ -214,7 +186,6 @@ export const PlanVersionSchema = z.object({
   changes: z.array(ChangeSchema).max(LIMITS.maxChanges).optional(),
 });
 
-/** Types inferred from the schemas above, so each schema stays the single source of truth. */
 export type EventType = z.infer<typeof EventTypeSchema>;
 export type CategoryId = z.infer<typeof CategoryIdSchema>;
 export type Diet = z.infer<typeof DietSchema>;

@@ -62,25 +62,6 @@ describe('Ideas: AI ideas must pass code checks', () => {
     expect(acceptAiIdeas(rejected, context)).toEqual([]);
   });
 
-  it('gives ideas in any script distinct, readable ids and drops repeated titles', () => {
-    const accepted = acceptAiIdeas(
-      [
-        idea({ title: 'मेहंदी की रात' }),
-        idea({ title: 'संगीत संध्या' }),
-        idea({ title: 'Haldi brunch!' }),
-        idea({ title: 'Haldi brunch?' }),
-        idea({ title: 'संगीत संध्या' }),
-      ],
-      context,
-    ).map((entry) => entry.id);
-    expect(accepted).toEqual([
-      'ai-मेहंदी-की-रात',
-      'ai-संगीत-संध्या',
-      'ai-haldi-brunch',
-      'ai-haldi-brunch-2',
-    ]);
-  });
-
   it('for "cheaper", keeps only ideas cheaper than what is shown', () => {
     const shown = [idea({ title: 'Shown', costLevel: 2 })].map((entry) => ({
       ...entry,

@@ -6,16 +6,11 @@ export interface CostModel {
   readonly perGuest: number;
 }
 
-/** A budget line an event uses, with its cost model. */
 export interface CategoryTemplate {
   readonly id: CategoryId;
   readonly cost: CostModel;
 }
 
-/**
- * A built-in task: when it is due, how long it takes and can shrink to, what it depends on, and the
- * words that name it.
- */
 export interface TaskTemplate {
   readonly id: string;
   readonly title: string;
@@ -43,9 +38,6 @@ export interface FormatOption {
   readonly compromise: number;
 }
 
-/**
- * Everything one event type brings: its reserve, budget lines, tasks and cheaper format options.
- */
 export interface EventTemplate {
   readonly eventType: EventType;
   readonly label: string;

@@ -21,7 +21,6 @@ export const asTemplate = (task: CustomTask): TaskTemplate => ({
   custom: true,
 });
 
-/** A task as typed in the form: a title and a due date, before it is checked. */
 export interface CustomTaskDraft {
   readonly title: string;
   readonly dueOn: string;

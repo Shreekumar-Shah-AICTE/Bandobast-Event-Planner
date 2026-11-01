@@ -30,10 +30,3 @@ export async function openSample(page: Page): Promise<void> {
     page.getByRole('heading', { level: 1, name: "Riya & Arjun's wedding" }),
   ).toBeFocused();
 }
-
-/** An ISO date `days` from today, so the form's "must be in the future" check never expires. */
-export function isoDaysFromNow(days: number): string {
-  const date = new Date();
-  date.setDate(date.getDate() + days);
-  return date.toISOString().slice(0, 10);
-}

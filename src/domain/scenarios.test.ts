@@ -19,7 +19,6 @@ function params(guests: number, totalRupees: number): BudgetParams {
   return {
     total: rupees(totalRupees),
     guests,
-    cityFactor: 1,
     template: WEDDING,
     priorities: profile.priorities,
     settings: { strategy: 'balanced', formats: [], useContingency: false },

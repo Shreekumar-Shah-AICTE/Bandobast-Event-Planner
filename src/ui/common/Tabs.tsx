@@ -2,7 +2,6 @@
 import { useRef, type KeyboardEvent, type ReactNode } from 'react';
 import { at } from '../../domain/access.js';
 
-/** One tab: its id, its label and an optional short note such as "2 late". */
 export interface TabSpec<T extends string> {
   readonly id: T;
   readonly label: string;
@@ -70,7 +69,6 @@ function TabButton<T extends string>({
   );
 }
 
-/** WAI-ARIA tabs: a labelled tab list and the active panel, with arrow keys, Home and End. */
 export function Tabs<T extends string>({
   label,
   tabs,
@@ -111,8 +109,6 @@ export function Tabs<T extends string>({
         id={`panel-${selected}`}
         aria-labelledby={`tab-${selected}`}
         className="tabpanel"
-        // Focusable (WAI-ARIA tabs pattern), so Tab reaches panels that start with plain text.
-        tabIndex={0}
       >
         {children}
       </div>

@@ -14,7 +14,6 @@ import type {
 } from '../../shared/schemas.js';
 import { LIMITS } from '../../shared/limits.js';
 import { buildBudget, type BudgetParams, type BudgetPlan, type FixedLine } from './budget.js';
-import { cityCostFactor } from './cityCost.js';
 import { asTemplate } from './customTasks.js';
 import type { IsoDate } from './dates.js';
 import { summarisePayments, type PaymentSummary } from './payments.js';
@@ -24,7 +23,6 @@ import { templateFor, type EventTemplate } from './templates/index.js';
 import { compressionTips, schedule, type CompressionTip, type Schedule } from './timeline.js';
 import { buildVendorCards, type VendorCard } from './vendors.js';
 
-/** Everything `buildPlan` derives from one version's inputs. */
 export interface Plan {
   readonly input: PlanInput;
   readonly template: EventTemplate;
@@ -88,7 +86,6 @@ export function buildPlan(input: PlanInput, today: IsoDate): Plan {
   const budgetParams: BudgetParams = {
     total: input.profile.budgetPaise,
     guests: input.profile.guests,
-    cityFactor: cityCostFactor(input.profile.city),
     template,
     priorities: input.profile.priorities,
     settings: input.settings,

@@ -33,7 +33,6 @@ function tabsFor(controls: PlanControls, state: PlanState): TabSpec<TabId>[] {
   ];
 }
 
-/** The tab list and the panel for the chosen tab. */
 export function PlanTabs({ controls, state, dispatch }: PlanTabsProps) {
   const [tab, setTab] = useState<TabId>('overview');
   const focusTab = useRef(false);

@@ -9,7 +9,6 @@ import { templateFor } from './templates/index.js';
 const params: BudgetParams = {
   total: rupees(1_080_000),
   guests: 250,
-  cityFactor: 1,
   template: templateFor('wedding'),
   priorities: weddingProfile().priorities,
   settings: { strategy: 'balanced', formats: [], useContingency: false },

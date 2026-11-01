@@ -9,7 +9,6 @@ import { QuoteDetails } from './QuoteDetails.js';
 import { applyQuote, removeQuote } from './quoteEdits.js';
 import { QuoteReader } from './QuoteReader.js';
 
-/** The Quotes tab: the quote checker, then each saved quote with its details and actions. */
 export function QuotesPanel({ controls }: { readonly controls: PlanControls }) {
   const { plan } = controls;
   const categories = [...new Set(plan.quotes.map((analysis) => analysis.quote.category))];

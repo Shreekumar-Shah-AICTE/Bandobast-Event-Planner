@@ -6,10 +6,6 @@ import { planReducer, type PlanAction, type PlanState } from './planState.js';
 /** Saves wait this long after the last change, so quick edits write once. */
 export const SAVE_DELAY_MS = 300;
 
-/**
- * What `usePlan` returns: the state, its dispatch, any problem with the saved plan, and whether the
- * last save worked.
- */
 export interface PlanStore {
   readonly state: PlanState;
   readonly dispatch: (action: PlanAction) => void;
@@ -18,10 +14,6 @@ export interface PlanStore {
   readonly saved: boolean;
 }
 
-/**
- * Loads the saved plan once, keeps the versions in a reducer, and saves after changes (debounced,
- * and at once when the tab is hidden).
- */
 export function usePlan(storage: Storage): PlanStore {
   const [loaded] = useState(() => loadPlan(storage));
   const [state, dispatch] = useReducer(planReducer, loaded.state);

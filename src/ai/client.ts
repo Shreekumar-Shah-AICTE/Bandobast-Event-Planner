@@ -11,14 +11,9 @@ import {
 } from '../../shared/aiContracts.js';
 import { AI_TIMING } from '../../shared/timing.js';
 
-/**
- * Why there is no usable answer: no network, AI switched off, rate-limited, refused, an invalid
- * answer, a timeout, or a cancelled request.
- */
 export type AiFailure =
   'offline' | 'unavailable' | 'limited' | 'rejected' | 'invalid' | 'timeout' | 'aborted';
 
-/** A checked answer with the model that wrote it, or the reason there is none. */
 export type AiResult<T extends AiTask> =
   | { readonly ok: true; readonly data: AiOutput<T>; readonly model: string }
   | { readonly ok: false; readonly reason: AiFailure };

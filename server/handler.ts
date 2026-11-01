@@ -23,10 +23,6 @@ export interface Timing {
   readonly storeTimeoutMs: number;
 }
 
-/**
- * What the handler needs from outside, passed in so tests can supply fakes (`liveDeps` builds the
- * real ones).
- */
 export interface HandlerDeps {
   readonly env: ServerEnv;
   readonly limiter: Limiter | null;

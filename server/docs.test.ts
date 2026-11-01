@@ -11,7 +11,7 @@ const read = (path: string): string =>
 
 const readme = read('README.md');
 const security = read('SECURITY.md');
-const architecture = read('docs/ARCHITECTURE.md');
+const decisions = read('docs/decisions.md');
 const footer = read('src/ui/common/Footer.tsx');
 const seconds = (ms: number): string => `${String(ms / 1000)} s`;
 
@@ -30,7 +30,7 @@ describe('numbers quoted in the docs', () => {
   });
 
   it('match the time budget', () => {
-    for (const doc of [readme, architecture]) {
+    for (const doc of [readme, decisions]) {
       expect(doc).toContain(`server answers within ${seconds(AI_TIMING.serverBudgetMs)}`);
       expect(doc).toContain(`browser waits ${seconds(AI_TIMING.clientTimeoutMs)}`);
       expect(doc).toContain(`function at ${String(AI_TIMING.functionMaxDurationS)} s`);

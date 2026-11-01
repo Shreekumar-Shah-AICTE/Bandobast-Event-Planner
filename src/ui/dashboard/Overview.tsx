@@ -9,7 +9,6 @@ import { paymentTotals } from '../vendors/Payments.js';
 import { TaskStatusBadge } from '../common/Labels.js';
 import type { PlanControls } from './controls.js';
 
-/** The plan's seven tabs. */
 export type TabId = 'overview' | 'budget' | 'timeline' | 'vendors' | 'quotes' | 'ideas' | 'history';
 
 const NEXT_TASKS = 5;
@@ -83,7 +82,6 @@ function Payments({ plan }: { readonly plan: Plan }) {
   );
 }
 
-/** The Overview tab: cards for what is coming up, the money and the vendors. */
 export function Overview({
   controls,
   onGo,

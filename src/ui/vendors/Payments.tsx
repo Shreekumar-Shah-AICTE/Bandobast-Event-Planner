@@ -14,7 +14,6 @@ import {
 } from '../../domain/payments.js';
 import type { PlanControls } from '../dashboard/controls.js';
 
-/** Words for each payment state. */
 export const PAYMENT_STATE_LABELS: Readonly<Record<PaymentState, string>> = {
   paid: 'Paid',
   due: 'Due',
@@ -36,9 +35,6 @@ interface VendorProps {
   readonly controls: PlanControls;
 }
 
-/**
- * A vendor's advances and instalments, with what is paid, due and overdue, and a form to add one.
- */
 export function VendorPaymentsBlock({ category, vendor, controls }: VendorProps) {
   const summary = controls.plan.payments.vendors.get(category);
   if (summary === undefined) return null;

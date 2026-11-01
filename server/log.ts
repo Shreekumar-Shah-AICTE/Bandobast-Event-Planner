@@ -12,7 +12,6 @@ export interface RequestLog {
   readonly attempts?: string;
 }
 
-/** Receives one entry per request: task, status, models tried and timing, never the user's text. */
 export type Logger = (entry: RequestLog) => void;
 
 /** Writes a JSON line to stdout (collected by Vercel's function logs). O(1). */

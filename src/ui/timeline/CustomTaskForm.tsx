@@ -5,7 +5,6 @@ import { addCustomTask } from '../../domain/customTasks.js';
 import { addDays } from '../../domain/dates.js';
 import type { PlanControls } from '../dashboard/controls.js';
 
-/** A form to add your own task with a due date. */
 export function CustomTaskForm({
   controls,
   nameRef,

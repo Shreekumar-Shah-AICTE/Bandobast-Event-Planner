@@ -1,10 +1,6 @@
 /** Labels, vendor questions and keywords per budget category. Plain data, no logic. */
 import type { Audience, CategoryId, Diet, Style } from '../../shared/schemas.js';
 
-/**
- * Display data for a budget category: label, vendor, Maps search term, the words that name it, and
- * questions to ask before booking.
- */
 export interface CategoryInfo {
   readonly label: string;
   readonly vendor: string;
@@ -15,7 +11,6 @@ export interface CategoryInfo {
   readonly questions: readonly string[];
 }
 
-/** Display data for every budget category. */
 export const CATEGORIES: Readonly<Record<CategoryId, CategoryInfo>> = {
   venue: {
     label: 'Venue',
@@ -205,14 +200,12 @@ export const TAILORED_QUESTIONS: readonly {
   },
 ];
 
-/** Words shown for each diet. */
 export const DIET_LABELS: Readonly<Record<Diet, string>> = {
   veg: 'vegetarian',
   jain: 'Jain vegetarian',
   mixed: 'veg and non-veg',
 };
 
-/** Words shown for each audience need. */
 export const AUDIENCE_LABELS: Readonly<Record<Audience, string>> = {
   elders: 'Many elders',
   kids: 'Many kids',
@@ -220,7 +213,6 @@ export const AUDIENCE_LABELS: Readonly<Record<Audience, string>> = {
   outstation: 'Outstation guests',
 };
 
-/** Words shown for each style. */
 export const STYLE_LABELS: Readonly<Record<Style, string>> = {
   traditional: 'Traditional',
   modern: 'Modern',

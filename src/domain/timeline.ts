@@ -10,10 +10,8 @@ import { err, ok, type Result } from './result.js';
 import type { TaskTemplate } from './templates/index.js';
 import { lookup } from './access.js';
 
-/** A task's status: done, late, tight (little slack) or on track. */
 export type TaskStatus = 'done' | 'late' | 'tight' | 'ok';
 
-/** A task placed on the calendar: its dates, slack, status, and what shortening it would save. */
 export interface ScheduledTask {
   readonly id: string;
   readonly title: string;
@@ -35,7 +33,6 @@ export interface ScheduledTask {
   readonly custom: boolean;
 }
 
-/** The scheduled tasks and the critical path. */
 export interface Schedule {
   readonly tasks: readonly ScheduledTask[];
   /** Open built-in tasks with the least slack, in dependency order. */
@@ -43,7 +40,6 @@ export interface Schedule {
   readonly lateCount: number;
 }
 
-/** Why the tasks could not be scheduled: a missing dependency or a cycle. */
 export type GraphError =
   | { readonly kind: 'unknownDependency'; readonly taskId: string; readonly dependsOn: string }
   | { readonly kind: 'cycle'; readonly taskIds: readonly string[] };
@@ -53,7 +49,6 @@ interface Node {
   readonly dependsOn: readonly string[];
 }
 
-/** The state of a task the user has not touched. */
 export const DEFAULT_TASK_STATE: TaskState = { done: false, delayDays: 0, compressed: false };
 
 function successorsOf(nodes: readonly Node[]): Result<Map<string, string[]>, GraphError> {

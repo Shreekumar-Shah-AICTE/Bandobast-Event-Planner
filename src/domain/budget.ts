@@ -14,9 +14,7 @@ import { rupees, sumPaise, type Paise } from './money.js';
 import type { CostModel, EventTemplate } from './templates/index.js';
 import { at } from './access.js';
 
-/** Where an amount comes from, shown as its label: Estimate, Your number, Quote or Booked. */
 export type Provenance = 'estimate' | 'user' | 'quote' | 'booked';
-/** The budget check, from comfortable to over budget. */
 export type Feasibility = 'comfortable' | 'fits' | 'tight' | 'over';
 
 /** A line whose amount the user fixed: their own number, a chosen quote or a booking. */
@@ -26,10 +24,6 @@ export interface FixedLine {
   readonly quoteId: string | null;
 }
 
-/**
- * One budget line: its typical cost, the amount planned, where that amount comes from, and the
- * quote behind it, if any.
- */
 export interface BudgetLine {
   readonly category: CategoryId;
   /** Typical cost for this guest count and format (assumption). */
@@ -40,10 +34,6 @@ export interface BudgetLine {
   readonly quoteId: string | null;
 }
 
-/**
- * The split of the total: every line, the reserve against its target, the shortfall and the budget
- * check.
- */
 export interface BudgetPlan {
   readonly total: Paise;
   readonly lines: readonly BudgetLine[];
@@ -58,15 +48,9 @@ export interface BudgetPlan {
   readonly feasibility: Feasibility;
 }
 
-/**
- * Inputs to the split: total, guests, the city's price level, the template, priorities, settings
- * and the lines the user fixed.
- */
 export interface BudgetParams {
   readonly total: Paise;
   readonly guests: number;
-  /** Price level of the event's city against metro prices (see cityCost.ts); 1 = metro. */
-  readonly cityFactor: number;
   readonly template: EventTemplate;
   readonly priorities: readonly CategoryId[];
   readonly settings: Settings;
@@ -80,7 +64,7 @@ interface OpenLine {
 
 const toSteps = (amount: Paise): number => Math.round(amount / ALLOCATION_STEP_PAISE);
 
-/** Typical cost `fixed + perGuest × guests`, scaled by the format and city multipliers. O(1). */
+/** Typical cost `fixed + perGuest × guests`, scaled by a format multiplier. O(1). */
 export function typicalCost(cost: CostModel, guests: number, multiplier = 1): Paise {
   return rupees(Math.round((cost.fixed + cost.perGuest * guests) * multiplier));
 }
@@ -221,7 +205,7 @@ function typicalLines(params: BudgetParams): OpenLine[] {
     typical: typicalCost(
       entry.cost,
       params.guests,
-      formatMultiplier(params.template, params.settings.formats, entry.id) * params.cityFactor,
+      formatMultiplier(params.template, params.settings.formats, entry.id),
     ),
   }));
 }

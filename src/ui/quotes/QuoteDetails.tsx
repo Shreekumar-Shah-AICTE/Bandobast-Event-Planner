@@ -17,7 +17,6 @@ export const totalText = ({ low, high, chargedGuests }: QuoteAnalysis): string =
   return `${range} including GST, for ${String(chargedGuests)} guests`;
 };
 
-/** One analysed quote: its lines and totals, and the flags worth raising with the vendor. */
 export function QuoteDetails({ analysis }: { readonly analysis: QuoteAnalysis }) {
   return (
     <>
