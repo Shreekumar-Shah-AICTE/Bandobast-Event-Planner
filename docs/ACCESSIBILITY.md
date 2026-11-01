@@ -36,7 +36,7 @@ Live regions report AI progress and results, saves and quote actions, so screen-
 ## Visual design
 
 - Text and controls meet AA contrast, which the axe checks below verify on every screen.
-- Buttons, choice controls and expandable summaries are at least 44 px tall (WCAG 2.5.8 asks for 24 px).
+- Buttons, choice controls, expandable summaries and links on their own line (Google Maps, Google Calendar) are at least 44 px tall (WCAG 2.5.8 asks for 24 px).
 - Status is never shown by colour alone: badges such as Late, On track, Estimate or Booked carry words. Symbols such as the ₹₹ cost levels have words for screen readers, and decorative icons are hidden from them.
 - Animations and transitions stop under `prefers-reduced-motion`. In Windows high-contrast mode (`forced-colors`), badges keep a visible border.
 

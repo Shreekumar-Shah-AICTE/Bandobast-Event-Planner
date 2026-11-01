@@ -118,6 +118,7 @@ function TaskActions({ task, controls, nameRef }: RowProps) {
         </button>
       )}
       <a
+        className="target-link"
         href={calendarUrl(taskCalendarEntry(task, title, city))}
         target="_blank"
         rel="noopener noreferrer"
