@@ -131,3 +131,25 @@ export function describeChange(change: Change, input: PlanInput): string {
       return `Done: ${taskTitle(input, change.taskId)}`;
   }
 }
+
+/**
+ * Labels for a list of changes, each read against the plan as the chosen changes
+ * before it left it, so "+50 guests, then +20" reads 200 → 250, then 250 → 270.
+ * Unticked (skipped) or invalid changes leave the running plan as it was. O(k · t).
+ */
+export function describeChanges(
+  input: PlanInput,
+  changes: readonly Change[],
+  today: IsoDate,
+  skipped: ReadonlySet<number> = new Set(),
+): string[] {
+  let current = input;
+  return changes.map((change, index) => {
+    const label = describeChange(change, current);
+    if (!skipped.has(index)) {
+      const next = applyChange(current, change, today);
+      if (next.ok) current = next.value;
+    }
+    return label;
+  });
+}

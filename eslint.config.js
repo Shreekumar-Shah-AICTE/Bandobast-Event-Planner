@@ -53,6 +53,11 @@ export default tseslint.config(
   {
     files: ['**/*.tsx'],
     ...jsxA11y.flatConfigs.strict,
+    rules: {
+      ...jsxA11y.flatConfigs.strict.rules,
+      // WAI-ARIA tabs pattern: a tab panel takes focus when it starts with plain text.
+      'jsx-a11y/no-noninteractive-tabindex': ['error', { tags: [], roles: ['tabpanel'] }],
+    },
   },
   reactHooks.configs.flat['recommended-latest'],
   {

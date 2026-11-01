@@ -176,7 +176,7 @@ describe('Quotes: rule-based reader for other formats', () => {
       'DJ ₹5,000 per hour\nGenerator Rs 3,000 per day\nCards ₹40 per card\n₹12,000\nAll prices inclusive of GST',
       'entertainment',
     );
-    expect(draft.vendorName).toBe('All prices inclusive of GST');
+    expect(draft.vendorName).toBe('Vendor quote');
     expect(draft.items.map((item) => [item.unit, item.amountRupees])).toEqual([
       ['perHour', 5000],
       ['perDay', 3000],
@@ -185,6 +185,28 @@ describe('Quotes: rule-based reader for other formats', () => {
     ]);
     expect(draft.items[3]?.label).toBe('Quoted amount');
     expect(draft.gst).toBe('included');
+  });
+
+  it('reads WhatsApp-style prices without ₹ or Rs next to "per plate" or "/-"', () => {
+    const draft = parseQuoteText(
+      'Buffet for 300 pax @ 850 per plate\nMinimum 250 plates\nDJ 3 hours, 6000 per hour\nDecor 45,000/-\n10% service charge per plate\nPer day: 2500',
+      'catering',
+    );
+    expect(draft.items.map((item) => [item.label, item.unit, item.amountRupees])).toEqual([
+      ['Buffet for 300 pax @ per plate', 'perGuest', 850],
+      ['DJ 3 hours, per hour', 'perHour', 6000],
+      ['Decor', 'fixed', 45_000],
+      ['Per day', 'perDay', 2500],
+    ]);
+    expect(draft.vendorName).toBe('Vendor quote');
+    expect(draft.minGuarantee).toBe(250);
+  });
+
+  it('takes the bare number closest to the unit phrase when numbers sit on both sides', () => {
+    const before = parseQuoteText('Veg thali 850 per plate for 300 guests', 'catering');
+    const after = parseQuoteText('Per plate 900, for 300 guests', 'catering');
+    expect(before.items.map((item) => [item.unit, item.amountRupees])).toEqual([['perGuest', 850]]);
+    expect(after.items.map((item) => [item.unit, item.amountRupees])).toEqual([['perGuest', 900]]);
   });
 
   it('marks GST unknown and uses a default vendor name when the text has neither', () => {

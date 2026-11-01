@@ -55,7 +55,9 @@ export async function readBody(request: Request): Promise<string | null> {
 
 /**
  * A keyed hash of the client IP, so the limiter never stores raw addresses.
- * On Vercel both headers are set by the platform's edge, not by the caller. O(1).
+ * On Vercel both headers come from the platform's edge, which overwrites any value
+ * the caller sends (https://vercel.com/docs/headers/request-headers), so they can't
+ * be spoofed. Anywhere else, run behind a proxy that does the same. O(1).
  */
 export async function clientKey(request: Request, salt: string): Promise<string> {
   const forwarded = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();

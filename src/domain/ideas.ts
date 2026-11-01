@@ -58,11 +58,28 @@ export function suggestIdeas(
     }));
 }
 
+/** Keeps letters, marks and digits of any script, so "मेहंदी रात" stays readable and distinct. */
 const slug = (title: string): string =>
   title
+    .normalize('NFKC')
     .toLowerCase()
-    .replace(/[^a-z0-9]+/gu, '-')
+    .replace(/[^\p{L}\p{M}\p{N}]+/gu, '-')
     .replace(/^-|-$/gu, '');
+
+/** `base`, or `base-2`, `base-3`… when an earlier idea already took it. */
+function uniqueId(base: string, taken: Set<string>): string {
+  let id = base;
+  for (let n = 2; taken.has(id); n += 1) id = `${base}-${String(n)}`;
+  taken.add(id);
+  return id;
+}
+
+/** True the first time a key is seen (and remembers it). */
+function firstTime(seen: Set<string>, key: string): boolean {
+  if (seen.has(key)) return false;
+  seen.add(key);
+  return true;
+}
 
 /** Context for {@link acceptAiIdeas}. */
 export interface IdeaContext {
@@ -82,15 +99,17 @@ export function acceptAiIdeas(
 ): readonly Idea[] {
   const allowed = new Set<CategoryId>(templateFor(context.eventType).categories.map((c) => c.id));
   const seen = new Set(context.shown.map((idea) => idea.title.toLowerCase()));
+  const ids = new Set<string>();
   const average =
     context.shown.reduce((sum, idea) => sum + idea.costLevel, 0) /
     Math.max(1, context.shown.length);
   return candidates
     .filter((idea) => !mentionsPriceOrVendor(`${idea.title} ${idea.description}`))
-    .filter((idea) => allowed.has(idea.category) && !seen.has(idea.title.toLowerCase()))
+    .filter((idea) => allowed.has(idea.category))
     .filter(
       (idea) =>
         context.refinement !== 'cheaper' || idea.costLevel === 1 || idea.costLevel < average,
     )
-    .map((idea) => ({ ...idea, id: `ai-${slug(idea.title)}`, source: 'ai' }));
+    .filter((idea) => firstTime(seen, idea.title.toLowerCase()))
+    .map((idea) => ({ ...idea, id: uniqueId(`ai-${slug(idea.title)}`, ids), source: 'ai' }));
 }

@@ -48,6 +48,7 @@ export function ChangeBox({ controls, onApply }: ChangeBoxProps) {
         <ChangePreview
           reading={ask.result}
           input={plan.input}
+          today={today}
           problem={problem}
           onApply={apply}
           onCancel={ask.clear}

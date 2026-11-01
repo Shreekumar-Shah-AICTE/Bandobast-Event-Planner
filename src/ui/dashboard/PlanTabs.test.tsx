@@ -4,6 +4,13 @@ import { renderPlan } from '../../test/render.js';
 import { targetIndex } from '../common/Tabs.js';
 
 describe('plan tabs', () => {
+  it('moves focus from the selected tab into its panel with Tab', async () => {
+    const { user } = renderPlan();
+    await user.click(screen.getByRole('tab', { name: 'Overview' }));
+    await user.tab();
+    expect(screen.getByRole('tabpanel')).toHaveFocus();
+  });
+
   it('moves between tabs with the arrow keys, Home and End', async () => {
     const { user } = renderPlan();
     const overview = screen.getByRole('tab', { name: 'Overview' });

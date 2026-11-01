@@ -109,6 +109,8 @@ export function Tabs<T extends string>({
         id={`panel-${selected}`}
         aria-labelledby={`tab-${selected}`}
         className="tabpanel"
+        // Focusable (WAI-ARIA tabs pattern), so Tab reaches panels that start with plain text.
+        tabIndex={0}
       >
         {children}
       </div>

@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import type { Change } from '../../shared/schemas.js';
 import { TODAY, weddingProfile } from '../test/fixtures.js';
-import { applyChange, applyChanges, describeChange, nextBudget } from './changes.js';
+import {
+  applyChange,
+  applyChanges,
+  describeChange,
+  describeChanges,
+  nextBudget,
+} from './changes.js';
 import { rupees } from './money.js';
 import { initialInput } from './plan.js';
 
@@ -28,6 +34,31 @@ describe('Change Test: applying "50 more guests, budget down 10%, event 2 weeks 
       'Budget ₹12 lakh → ₹10.8 lakh',
       'Event 14 days earlier (4 Feb 2027)',
     ]);
+  });
+});
+
+describe('Change Test: labels follow the changes in order', () => {
+  const twoGuestEdits: Change[] = [
+    { kind: 'guests', mode: 'add', value: 50, evidence: '50 more guests' },
+    { kind: 'guests', mode: 'add', value: 20, evidence: 'and 20 more' },
+    { kind: 'budget', mode: 'addPct', value: -10, evidence: 'budget down 10%' },
+    { kind: 'budget', mode: 'addPct', value: -10, evidence: 'then 10% less again' },
+  ];
+
+  it('reads each change against the plan the changes before it left', () => {
+    expect(describeChanges(input, twoGuestEdits, TODAY)).toEqual([
+      'Guests 200 → 250',
+      'Guests 250 → 270',
+      'Budget ₹12 lakh → ₹10.8 lakh',
+      'Budget ₹10.8 lakh → ₹9.7 lakh',
+    ]);
+  });
+
+  it('ignores unticked and invalid changes when labelling the next one', () => {
+    const tooMany: Change = { kind: 'guests', mode: 'set', value: 9000, evidence: '9000 guests' };
+    expect(
+      describeChanges(input, [tooMany, ...twoGuestEdits.slice(0, 2)], TODAY, new Set([1])),
+    ).toEqual(['Guests 200 → 9000', 'Guests 200 → 250', 'Guests 200 → 220']);
   });
 });
 
