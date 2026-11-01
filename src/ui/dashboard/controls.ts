@@ -3,6 +3,7 @@ import type { PlanInput } from '../../../shared/schemas.js';
 import type { IsoDate } from '../../domain/dates.js';
 import type { Plan } from '../../domain/plan.js';
 
+/** What every tab gets: the built plan, today, and the actions that edit or commit the plan. */
 export interface PlanControls {
   readonly plan: Plan;
   readonly today: IsoDate;

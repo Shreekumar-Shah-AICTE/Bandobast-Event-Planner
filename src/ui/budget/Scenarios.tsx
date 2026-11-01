@@ -22,6 +22,7 @@ interface ScenariosProps {
 const optionsKey = (scenarios: readonly Scenario[]): string =>
   scenarios.map((s) => `${s.id}:${String(s.budget.contingency)}`).join('|');
 
+/** The ranked ways to rebalance, each with what it changes and a button to use it. */
 export function Scenarios({ scenarios, settings, onUse }: ScenariosProps) {
   if (scenarios.length === 0) {
     return <p>The budget covers typical costs and the reserve, so nothing needs rebalancing.</p>;

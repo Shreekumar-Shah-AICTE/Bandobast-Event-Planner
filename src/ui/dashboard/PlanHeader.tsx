@@ -15,6 +15,7 @@ const timeLeft = (today: IsoDate, date: IsoDate): string => {
   return days === 0 ? 'Today is the day' : 'The event date has passed';
 };
 
+/** The plan's header: the event, the time left, the budget check, late tasks and vendors booked. */
 export function PlanHeader({ plan, today }: { readonly plan: Plan; readonly today: IsoDate }) {
   const { profile } = plan.input;
   const booked = plan.vendors.filter((card) => card.status === 'booked').length;

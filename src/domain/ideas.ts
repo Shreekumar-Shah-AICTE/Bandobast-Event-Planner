@@ -9,8 +9,10 @@ import { mentionsPriceOrVendor } from './grounding.js';
 import { IDEA_LIBRARY, type IdeaTag, type LibraryIdea } from './ideaLibrary.js';
 import { templateFor } from './templates/index.js';
 
+/** A way to steer the idea list. */
 export type Refinement = (typeof REFINEMENTS)[number];
 
+/** An idea on screen, from the library or from Gemini. */
 export interface Idea extends LibraryIdea {
   readonly id: string;
   readonly source: 'library' | 'ai';

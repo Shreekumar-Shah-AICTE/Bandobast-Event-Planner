@@ -17,11 +17,11 @@
 | Area | In short | Details |
 | --- | --- | --- |
 | Problem fit | Budgets, timelines, vendor checklists and personalised ideas for four event types, plus the Change Test and a quote checker | [What the problem asks](#what-the-problem-asks-and-where-it-lives) |
-| Code quality | Strict TypeScript with no `any`, a pure planning engine, zod contracts shared by browser and server. Lint enforces complexity ≤ 8 and functions ≤ 50 lines. | [Architecture](#architecture), [decisions](docs/decisions.md) |
+| Code quality | Strict TypeScript with no `any`, a pure planning engine, zod contracts shared by browser and server. Lint enforces layer boundaries, complexity ≤ 8 and functions ≤ 50 lines. | [ARCHITECTURE.md](docs/ARCHITECTURE.md), [CONTRIBUTING.md](CONTRIBUTING.md) |
 | Security | Server-only key, request checks before parsing, schemas both ways, rate limits in a shared store that fail closed, strict CSP | [Security](#security), [SECURITY.md](SECURITY.md) |
 | Efficiency | AI only on request, a 24-hour answer cache, one time budget per request, about 136 kB of gzipped JavaScript | [Efficiency](#efficiency) |
-| Testing | Unit, property, component and browser tests, 99.7% line coverage, run in CI | [Testing](#testing), [claims](#claims-you-can-check) |
-| Accessibility | WCAG 2.2 AA: no axe violations on any screen, keyboard tabs, managed focus, live regions | [Accessibility](#accessibility-wcag-22-aa) |
+| Testing | Unit, property, component and browser tests, 99.7% line coverage, run in CI | [TESTING.md](docs/TESTING.md), [claims](#claims-you-can-check) |
+| Accessibility | WCAG 2.2 AA: no axe violations on any screen, keyboard tabs, managed focus, live regions | [ACCESSIBILITY.md](docs/ACCESSIBILITY.md) |
 
 ## The Change Test: a 30-second demo
 
@@ -94,36 +94,14 @@ sequenceDiagram
 
 ## Architecture
 
-```mermaid
-flowchart LR
-  subgraph Browser
-    UI[React screens<br/>src/ui] --> State[Plan versions<br/>src/state]
-    State --> Engine[Planning engine<br/>src/domain, pure TS]
-    UI --> Client[AI client + readers<br/>src/ai]
-    Client -->|AI down or answer rejected| Rules[Built-in rules<br/>src/domain]
-    State <--> LS[(localStorage<br/>or a plan file)]
-  end
-  Client -->|POST /api/ai/:task, same origin| Fn[Vercel Function<br/>api/ai + server]
-  Fn --> Limits[(Upstash Redis<br/>rate limits + answer cache)]
-  Fn --> Gemini[Gemini API]
-  Shared[shared/ zod contracts + limits] -.-> Client
-  Shared -.-> Fn
-```
+A pure planning engine (`src/domain/`) computes every number, React screens (`src/ui/`) show it, and a Vercel Function (`server/`, `api/`) runs the five Gemini tasks. The zod contracts in `shared/` are checked on both sides, and lint enforces which layer may import which.
 
 - **One pure function makes the plan.** `buildPlan(input, today)` turns your inputs (profile, fixed amounts, task states, your own tasks, vendor statuses, quotes, payments) into the budget, scenarios, schedule, vendor cards, quote analyses and payment totals. Nothing that can be derived is stored. A version is just its inputs, so the diff between two versions is exact.
 - **Money is integer paise** and dates are UTC day numbers, so there are no float or time-zone errors. Indian notation like `1.2 lakh`, `85k` or `₹2 crore` is parsed in [`money.ts`](src/domain/money.ts).
-- **Contracts are shared.** The browser and the function validate the same zod schemas in [`shared/`](shared). Stored plans are validated on every load, and newer formats are set aside, not guessed at.
+- **Contracts are shared.** Stored plans are validated on every load, and newer formats are set aside, not guessed at.
 - **Expected failures are values, not exceptions** ([`result.ts`](src/domain/result.ts)). The AI function never throws to the client. Each error says whether the browser should fall back to its rules.
 
-| Folder | Holds |
-| --- | --- |
-| `src/domain/` | The planning engine: budget, scenarios, timeline, vendors, quotes, ideas, change reader, diff. No React, no I/O. |
-| `src/state/` | Reducer for versions, restore and undo; saving with a backup and an in-memory fallback |
-| `src/ai/` | Typed client for the function, plus readers that try Gemini first and then the rules |
-| `src/ui/` | Screens: welcome, intake, dashboard, the impact report and seven tabs |
-| `server/`, `api/` | The AI function: request checks, rate limits, cache, model chain, prompts, output checks |
-| `shared/` | zod contracts, input limits and the shared time budget |
-| `e2e/` | Playwright journeys with axe-core checks |
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) has the layer diagram, the folder map with its import rules, how a change flows through the code, nine decision records and where new code goes. [CONTRIBUTING.md](CONTRIBUTING.md) lists the rules every change must pass.
 
 ## Security
 
@@ -151,16 +129,11 @@ flowchart LR
 - **Readable:** AA contrast, labels on every control, words for screen readers next to symbols (₹₹ cost levels), and reduced motion respected.
 - **Tested:** axe-core finds no WCAG 2.2 A/AA violations on any screen in Playwright (welcome, the form with its error summary, the change preview, the What changed report and every plan tab), on both desktop and mobile. `eslint-plugin-jsx-a11y` runs on every file, and component tests find elements by role and name.
 
+The keyboard map, the form rules and each check are in [docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md).
+
 ## Testing
 
-| Layer | What | Where |
-| --- | --- | --- |
-| Planning engine | Unit tests plus fast-check property tests. Examples: the budget split always adds up exactly; a delay never moves a task's predecessors. | `src/domain/*.test.ts` |
-| AI function | Every status path with a fake model, limiter and cache: 403, 405, 413, 415, 429, fail-closed 503, timeouts, invalid model JSON, cache poisoning, never logging text | `server/*.test.ts` |
-| Browser | AI client and readers (AI first, then rules), the reducer and saving, and each tab with Testing Library, including focus and announcements | `src/**/*.test.ts(x)` |
-| Journeys | The Change Test, the Gemini path, quotes, a new plan, the keyboard, axe, and no CSP violations under the production headers, on desktop and mobile | `e2e/plan.spec.ts` |
-
-Coverage thresholds are enforced in [`vite.config.ts`](vite.config.ts): 95% overall and 100% of lines for the planning engine. Today: 377 unit and component tests, 99.7% of lines, 98% of branches, plus 14 browser runs. CI runs everything on every push ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
+Unit, property, component and browser tests: 377 unit and component tests, 99.7% of lines and 98% of branches, plus 14 browser runs. Coverage thresholds are enforced in [`vite.config.ts`](vite.config.ts): 95% overall and 100% of lines for the planning engine. The model is always faked, including invalid and slow answers, and the browser journeys run under the production CSP. CI runs everything on every push ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)). What each layer tests: [docs/TESTING.md](docs/TESTING.md).
 
 ## Claims you can check
 
@@ -204,6 +177,8 @@ Settings are server-only (Vercel → Settings → Environment Variables; templat
 - **Plans stay in your browser.** There are no accounts, and the plan is never stored on a server. A plan file moves a plan to another device, and it passes the same checks as a saved plan.
 - **Estimates are starting points.** Typical mid-range costs, scaled to the city's X, Y or Z class, fill the budget until your own numbers and quotes replace them. Every rupee carries its label: Estimate, Your number, Quote or Booked.
 - **The backup rules never guess.** When Gemini is unavailable, built-in rules read common phrasing. Anything they cannot read is listed as not understood.
+
+The [decision records](docs/ARCHITECTURE.md#decision-records) give the context and the cost of each choice.
 
 ## Licence
 

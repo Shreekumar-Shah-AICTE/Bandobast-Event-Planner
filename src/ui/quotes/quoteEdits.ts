@@ -8,6 +8,7 @@ export function nextQuoteId(quotes: readonly Quote[]): string {
   return `q${String(Math.max(0, ...used) + 1)}`;
 }
 
+/** Adds a checked quote to the plan with a new id. */
 export function addQuote(
   input: PlanInput,
   draft: QuoteDraft,

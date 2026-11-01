@@ -5,6 +5,7 @@
 import { deserialise, serialise, STORAGE_KEY, type LoadError } from '../domain/storage.js';
 import { EMPTY_STATE, type PlanState } from './planState.js';
 
+/** The state to start from, and why an existing save could not be used. */
 export interface Loaded {
   readonly state: PlanState;
   /** Why an existing save could not be used, or null. */

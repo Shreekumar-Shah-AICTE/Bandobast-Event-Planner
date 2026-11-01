@@ -5,6 +5,7 @@ import { COMMUNITY } from './community.js';
 import type { EventTemplate } from './types.js';
 import { WEDDING } from './wedding.js';
 
+/** Template types, re-exported for the rest of the engine. */
 export type {
   CategoryTemplate,
   CostModel,

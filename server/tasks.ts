@@ -59,6 +59,11 @@ const written = (value: number, text: string): boolean =>
 const keep = <T>(value: T | null, check: (present: T) => boolean): T | null =>
   value !== null && check(value) ? value : null;
 
+/**
+ * Keeps an intake field only when the text supports it: the title, city, guests and budget must be
+ * written in it, and the date must fall after today and inside the planning window. O(n) in the
+ * text length.
+ */
 export function guardIntake(out: AiOutput<'intake'>, input: AiInput<'intake'>): AiOutput<'intake'> {
   const { text, today } = input;
   const latest = addDays(today, SERVER_CONFIG.maxEventDaysAhead);
@@ -92,6 +97,10 @@ const NUMBERS_HOLD: Readonly<Record<ChangeWire['kind'], (wire: ChangeWire) => bo
   taskDone: () => true,
 };
 
+/**
+ * Keeps a change only when its evidence is quoted from the request, its numbers are written in that
+ * evidence and its task id exists. Dropped changes are listed as not understood. O(c · n).
+ */
 export function guardChange(out: AiOutput<'change'>, input: AiInput<'change'>): AiOutput<'change'> {
   const taskIds = new Set(templateFor(input.eventType).tasks.map((task) => task.id));
   const kept = out.changes.filter(
@@ -108,6 +117,10 @@ export function guardChange(out: AiOutput<'change'>, input: AiInput<'change'>): 
   return { changes: kept, unparsed: unparsed.slice(0, LIMITS.maxChanges) };
 }
 
+/**
+ * Keeps amounts, quantities, the minimum guarantee and the GST rate only when they are written in
+ * the quote. Notes must be the vendor's own words, with contacts removed. O(i · n).
+ */
 export function guardQuote(out: AiOutput<'quote'>, input: AiInput<'quote'>): AiOutput<'quote'> {
   const { text } = input;
   const rateWritten = (rate: number): boolean =>
@@ -125,6 +138,10 @@ export function guardQuote(out: AiOutput<'quote'>, input: AiInput<'quote'>): AiO
   };
 }
 
+/**
+ * Keeps the ideas that pass the browser's own checks (`acceptAiIdeas`), once per title. Null when
+ * none is left.
+ */
 export function guardIdeas(
   out: AiOutput<'ideas'>,
   input: AiInput<'ideas'>,
@@ -143,6 +160,10 @@ export function guardIdeas(
   return unique.size > 0 ? { ideas: [...unique.values()] } : null;
 }
 
+/**
+ * Accepts the explanation only when it uses known placeholders and contains no digits. Null
+ * otherwise.
+ */
 export function guardExplain(
   out: AiOutput<'explain'>,
   input: AiInput<'explain'>,

@@ -37,6 +37,10 @@ function layout(slices: readonly Slice[]) {
   return placed;
 }
 
+/**
+ * A bar of where the money goes. With its legend it is a figure; without it, the bar is decoration
+ * next to text that says the same.
+ */
 export function BudgetBar({
   budget,
   legend = true,

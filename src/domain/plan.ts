@@ -24,6 +24,7 @@ import { templateFor, type EventTemplate } from './templates/index.js';
 import { compressionTips, schedule, type CompressionTip, type Schedule } from './timeline.js';
 import { buildVendorCards, type VendorCard } from './vendors.js';
 
+/** Everything `buildPlan` derives from one version's inputs. */
 export interface Plan {
   readonly input: PlanInput;
   readonly template: EventTemplate;

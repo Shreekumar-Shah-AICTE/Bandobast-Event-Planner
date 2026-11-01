@@ -16,6 +16,10 @@ interface HistoryProps {
   readonly dispatch: (action: PlanAction) => void;
 }
 
+/**
+ * The History tab: every kept version, newest first, with what it changed and a button to restore
+ * it.
+ */
 export function HistoryPanel({ state, today, dispatch }: HistoryProps) {
   const newestFirst = state.versions.toReversed();
   return (

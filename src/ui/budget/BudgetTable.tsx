@@ -9,6 +9,10 @@ import { ProvenanceBadge } from '../common/Labels.js';
 import type { PlanControls } from '../dashboard/controls.js';
 import { withEstimate, withUserAmount } from './budgetEdits.js';
 
+/**
+ * "Where the money goes": each line with its label and the actions to set, edit or reset its
+ * amount.
+ */
 export function BudgetTable({ controls }: { readonly controls: PlanControls }) {
   return (
     <table className="data-table budget-table">

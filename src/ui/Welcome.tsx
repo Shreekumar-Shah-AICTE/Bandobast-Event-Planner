@@ -31,6 +31,7 @@ const FEATURES = [
   },
 ] as const;
 
+/** The first screen: start a new plan, try the sample wedding, or open a saved plan file. */
 export function Welcome({ onStart, onSample, onOpen }: WelcomeProps) {
   return (
     <section className="welcome" aria-labelledby="welcome-title">

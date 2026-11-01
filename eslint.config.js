@@ -6,6 +6,9 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
+/** One import rule per layer: `regex` matches the import paths this layer may not use. */
+const boundary = (regex, why) => ({ patterns: [{ regex, message: `Layer boundary: ${why}.` }] });
+
 export default tseslint.config(
   { ignores: ['dist', 'coverage', 'playwright-report', 'test-results', 'node_modules'] },
   js.configs.recommended,
@@ -48,6 +51,62 @@ export default tseslint.config(
       '@typescript-eslint/switch-exhaustiveness-check': 'error',
       '@typescript-eslint/consistent-type-imports': 'error',
       '@typescript-eslint/restrict-template-expressions': ['error', { allowNumber: false }],
+    },
+  },
+  {
+    // Layer boundaries (docs/ARCHITECTURE.md): the contracts and the planning engine stay pure,
+    // the browser never imports server code, and the server never imports React or the UI.
+    files: ['shared/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        boundary('^react|(^|/)(src|server|api)/', 'shared/ holds contracts only'),
+      ],
+    },
+  },
+  {
+    files: ['src/domain/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        boundary('^react|(^|/)(ui|state|ai|server|api)/', 'the engine is pure TypeScript'),
+      ],
+    },
+  },
+  {
+    files: ['src/state/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        boundary('(^|/)(ui|ai|server|api)/', 'state depends on the engine only'),
+      ],
+    },
+  },
+  {
+    files: ['src/ai/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        boundary('^react|(^|/)(ui|state|server|api)/', 'AI readers stay UI-free'),
+      ],
+    },
+  },
+  {
+    files: ['src/ui/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        boundary('(^|/)(server|api)/', 'the browser never imports server code'),
+      ],
+    },
+  },
+  {
+    files: ['server/**/*.ts', 'api/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        boundary('^react|(^|/)(ui|state|ai)/', 'the server never imports browser code'),
+      ],
     },
   },
   {

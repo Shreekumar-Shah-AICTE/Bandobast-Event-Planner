@@ -20,6 +20,7 @@ interface TextFieldProps {
   readonly autoComplete?: string;
 }
 
+/** A labelled text input with an optional hint and error, linked by `aria-describedby`. */
 export function TextField({ id, label, value, onChange, error, hint, ...rest }: TextFieldProps) {
   return (
     <div className={error === undefined ? 'field' : 'field has-error'}>
@@ -53,6 +54,7 @@ export function TextField({ id, label, value, onChange, error, hint, ...rest }: 
   );
 }
 
+/** One choice in a radio or checkbox group. */
 export interface Option<T extends string> {
   readonly value: T;
   readonly label: string;

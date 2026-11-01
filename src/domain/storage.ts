@@ -8,16 +8,23 @@ import { LIMITS } from '../../shared/limits.js';
 import { PlanVersionSchema, type PlanVersion } from '../../shared/schemas.js';
 import { err, ok, type Result } from './result.js';
 
+/** The `localStorage` key for the saved plan. */
 export const STORAGE_KEY = 'bandobast.plan.v1';
+/** Version of the saved format. A save from a newer format is set aside, not guessed at. */
 export const SCHEMA_VERSION = 1;
 
+/** The saved history: the format version, the versions and the one on screen. */
 export const PersistedSchema = z.object({
   schemaVersion: z.literal(SCHEMA_VERSION),
   versions: z.array(PlanVersionSchema).min(1).max(LIMITS.maxVersions),
   current: z.int().min(1),
 });
+/** A saved history that passed its schema. */
 export type Persisted = z.infer<typeof PersistedSchema>;
 
+/**
+ * Why no saved plan was loaded: there is none, it is unreadable, or it comes from a newer format.
+ */
 export type LoadError = 'empty' | 'corrupt' | 'unsupported';
 
 /** Serialises the history (JSON). O(n). */

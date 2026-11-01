@@ -10,6 +10,7 @@ import { useAsk } from '../common/hooks.js';
 import { ChangePreview } from './ChangePreview.js';
 import type { PlanControls } from './controls.js';
 
+/** Example changes offered as one-click buttons. */
 export const EXAMPLES = [SAMPLE_CHANGE, 'Caterer delayed by 5 days', 'Budget is now 10 lakh'];
 
 interface ChangeBoxProps {
@@ -17,6 +18,7 @@ interface ChangeBoxProps {
   readonly onApply: (input: PlanInput, label: string, changes: readonly Change[]) => void;
 }
 
+/** "Something changed?": type a change or pick an example, then check what it would change. */
 export function ChangeBox({ controls, onApply }: ChangeBoxProps) {
   const { plan, today } = controls;
   const [text, setText] = useState('');

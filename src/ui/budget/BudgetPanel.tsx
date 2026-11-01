@@ -9,6 +9,7 @@ import { BudgetBar } from './BudgetBar.js';
 import { BudgetTable } from './BudgetTable.js';
 import { Scenarios } from './Scenarios.js';
 
+/** The Budget tab: the budget check, the bar, the line table and the ways to rebalance. */
 export function BudgetPanel({ controls }: { readonly controls: PlanControls }) {
   const { plan } = controls;
   const { budget } = plan;

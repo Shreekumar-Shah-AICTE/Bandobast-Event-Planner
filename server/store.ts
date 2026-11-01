@@ -7,6 +7,10 @@ import { Ratelimit } from '@upstash/ratelimit';
 import type { Redis } from '@upstash/redis';
 import { SERVER_CONFIG } from './config.js';
 
+/**
+ * The limiter's verdict for one request: allowed or not, which limit decided, and that limit's
+ * size.
+ */
 export interface LimitDecision {
   readonly allowed: boolean;
   readonly reason: 'ok' | 'client' | 'client-daily' | 'daily' | 'unavailable';
@@ -16,10 +20,12 @@ export interface LimitDecision {
   readonly resetMs: number;
 }
 
+/** Checks one client's request against the rate limits kept in the shared store. */
 export interface Limiter {
   check(clientKey: string): Promise<LimitDecision>;
 }
 
+/** Checked answers kept for 24 hours, keyed by a one-way hash of the request. */
 export interface AnswerCache {
   get(key: string): Promise<unknown>;
   set(key: string, value: unknown): Promise<void>;

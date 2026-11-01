@@ -76,6 +76,7 @@ export function formatDelta(amount: Paise): string {
   return `${amount > 0 ? '+' : '−'}${formatInr(Math.abs(amount))}`;
 }
 
+/** An amount found in text, in paise, and whether it is marked as money. */
 export interface AmountMatch {
   readonly paise: Paise;
   /** Carries a currency marker, unit or rupee suffix, so it is money, not a count. */

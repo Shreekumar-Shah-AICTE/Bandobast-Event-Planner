@@ -13,6 +13,7 @@ import { isIsoDate, type IsoDate } from '../../domain/dates.js';
 import type { IntakeDraft } from '../../domain/intake.js';
 import { formatInr, parseMoney, rupees } from '../../domain/money.js';
 
+/** The form as typed, before it is checked. */
 export interface FormValues {
   readonly eventType: EventType | null;
   readonly title: string;
@@ -26,18 +27,22 @@ export interface FormValues {
   readonly style: Style;
 }
 
+/** The required fields, in the order the error summary lists them. */
 export const FIELDS = ['eventType', 'title', 'city', 'eventDate', 'guests', 'budget'] as const;
 export type FieldName = (typeof FIELDS)[number];
 
+/** One problem with one field, shown in the summary and next to the field. */
 export interface FieldError {
   readonly field: FieldName;
   readonly message: string;
 }
 
+/** A checked profile, or the errors that stop one. */
 export type Validation =
   | { readonly profile: EventProfile; readonly errors: readonly [] }
   | { readonly profile: null; readonly errors: readonly FieldError[] };
 
+/** The form before anything is typed. */
 export const EMPTY_FORM: FormValues = {
   eventType: null,
   title: '',

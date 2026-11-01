@@ -7,6 +7,10 @@ import { GoogleGenAI, ThinkingLevel } from '@google/genai';
 import type { Result } from '../src/domain/result.js';
 import { SERVER_CONFIG } from './config.js';
 
+/**
+ * One structured-output call: the system instruction, the prompt, the JSON Schema for the answer,
+ * an output token cap and a cancel signal.
+ */
 export interface ModelRequest {
   readonly system: string;
   readonly prompt: string;
@@ -43,6 +47,9 @@ export function geminiCaller(apiKey: string): ModelCall {
 /** `budget`: not tried, because too little of the request's time was left. */
 export type AttemptOutcome = 'ok' | 'error' | 'timeout' | 'json' | 'schema' | 'guard' | 'budget';
 
+/**
+ * What one model in the cascade returned: its outcome, its name and, on success, the parsed value.
+ */
 export interface Attempt {
   readonly outcome: AttemptOutcome;
   readonly model: string;

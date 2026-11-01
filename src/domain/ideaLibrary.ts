@@ -1,8 +1,10 @@
 /** Curated ideas per event type. Cost is a level (1 = ₹, 3 = ₹₹₹), never a price. */
 import type { CategoryId, CostLevel, EventType, IDEA_TAGS } from '../../shared/schemas.js';
 
+/** A tag that matches an idea to the guests or the style. */
 export type IdeaTag = (typeof IDEA_TAGS)[number];
 
+/** A curated idea: title, description, budget category, relative cost level and tags. */
 export interface LibraryIdea {
   readonly title: string;
   readonly description: string;
@@ -11,6 +13,7 @@ export interface LibraryIdea {
   readonly tags: readonly IdeaTag[];
 }
 
+/** The curated ideas for each event type. */
 export const IDEA_LIBRARY: Readonly<Record<EventType, readonly LibraryIdea[]>> = {
   wedding: [
     {

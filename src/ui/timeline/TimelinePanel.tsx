@@ -26,6 +26,9 @@ export function downloadIcs(plan: Plan, today: IsoDate): void {
   downloadText(text, 'bandobast-plan.ics', 'text/calendar');
 }
 
+/**
+ * The Timeline tab: tasks with their status, ways to catch up, calendar links and your own tasks.
+ */
 export function TimelinePanel({ controls }: { readonly controls: PlanControls }) {
   const { plan, today } = controls;
   const tasks = plan.schedule.tasks.toSorted((a, b) => a.due.localeCompare(b.due));

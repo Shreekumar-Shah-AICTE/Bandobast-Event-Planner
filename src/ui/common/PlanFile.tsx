@@ -28,6 +28,7 @@ type OpenProblem = keyof typeof OPEN_PROBLEMS;
 const titleOf = (saved: Pick<PlanState, 'versions' | 'current'>): string =>
   saved.versions.find((entry) => entry.version === saved.current)?.input.profile.title ?? 'Plan';
 
+/** Downloads the whole history as a plan file that can be opened on another device. */
 export function SavePlanButton({ state }: { readonly state: PlanState }) {
   return (
     <button

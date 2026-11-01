@@ -8,6 +8,7 @@ import { formatCompact } from './money.js';
 import { err, ok, type Result } from './result.js';
 import type { Scenario } from './scenarios.js';
 
+/** Placeholder names mapped to the text code writes in their place. */
 export type Placeholders = Readonly<Record<string, string>>;
 
 const PLACEHOLDER_RE = /\{\{([a-z]+(?::[a-z-]+){1,2})\}\}/gu;

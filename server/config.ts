@@ -1,6 +1,10 @@
 /** Tunables for the AI function, in one place. Values are deliberate, not magic. */
 import { AI_TIMING } from '../shared/timing.js';
 
+/**
+ * Every server-side limit, timeout and model setting in one place. `server/docs.test.ts` checks the
+ * numbers the docs quote.
+ */
 export const SERVER_CONFIG = {
   /** Largest accepted request body; the biggest input (a pasted quote) is 4,000 characters. */
   maxBodyBytes: 16 * 1024,

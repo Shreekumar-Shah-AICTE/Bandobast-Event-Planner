@@ -77,6 +77,10 @@ function NotUnderstood({ clauses }: { readonly clauses: readonly string[] }) {
   );
 }
 
+/**
+ * The changes that were read, each with the words it came from, to confirm or cancel before
+ * anything is applied.
+ */
 export function ChangePreview({
   reading,
   input,

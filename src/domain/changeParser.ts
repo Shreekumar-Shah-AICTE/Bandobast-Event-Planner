@@ -12,6 +12,7 @@ import { parseMoney, toRupees } from './money.js';
 import type { TaskTemplate } from './templates/index.js';
 import { at } from './access.js';
 
+/** What the rule-based reader understood, and the clauses it could not read. */
 export interface ParsedChanges {
   readonly changes: readonly Change[];
   /** Clauses the rules could not read. */

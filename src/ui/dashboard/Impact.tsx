@@ -20,6 +20,10 @@ interface ImpactProps {
   readonly onClose: () => void;
 }
 
+/**
+ * The What changed report for the latest change, with ways to rebalance and Undo. It takes focus
+ * when it opens.
+ */
 export function ImpactReport({ before, label, controls, onUndo, onClose }: ImpactProps) {
   const heading = useFocusOnMount<HTMLHeadingElement>();
   const { plan, today } = controls;

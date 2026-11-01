@@ -43,6 +43,10 @@ function ErrorSummary({ errors }: { readonly errors: readonly FieldError[] }) {
   );
 }
 
+/**
+ * The new-plan form: describe the event or fill in the fields; errors appear in a summary that
+ * links to each field.
+ */
 export function Intake({ today, onDone, onCancel }: IntakeProps) {
   const [values, setValues] = useState<FormValues>(EMPTY_FORM);
   const [errors, setErrors] = useState<readonly FieldError[]>([]);

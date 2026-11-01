@@ -101,6 +101,7 @@ function Size({ values, errors, today, onChange }: EventProps & { readonly today
   );
 }
 
+/** The event fields: type, title, city, date, guests and budget. */
 export function EventFields(props: EventProps & { readonly today: IsoDate }) {
   return (
     <>
@@ -110,6 +111,7 @@ export function EventFields(props: EventProps & { readonly today: IsoDate }) {
   );
 }
 
+/** The preference fields: priorities, diet, audience and style. */
 export function PreferenceFields({ values, onChange }: FieldsProps) {
   const categories = values.eventType === null ? [] : templateFor(values.eventType).categories;
   return (

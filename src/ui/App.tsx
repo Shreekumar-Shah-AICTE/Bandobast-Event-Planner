@@ -126,6 +126,10 @@ function Marigold() {
   );
 }
 
+/**
+ * The app shell: the skip link, the header, and the screen for the current state (welcome, intake
+ * or dashboard).
+ */
 export function App({ storage, today, persistent = true }: AppProps) {
   const store = usePlan(storage);
   return (

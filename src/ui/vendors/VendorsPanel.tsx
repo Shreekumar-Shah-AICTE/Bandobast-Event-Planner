@@ -8,6 +8,7 @@ import { plural } from '../common/format.js';
 import type { PlanControls } from '../dashboard/controls.js';
 import { VendorPaymentsBlock } from './Payments.js';
 
+/** The Vendors tab: a card per vendor with its status, requirements, questions and payments. */
 export function VendorsPanel({ controls }: { readonly controls: PlanControls }) {
   const { vendors } = controls.plan;
   const booked = vendors.filter((card) => card.status === 'booked').length;
