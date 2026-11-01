@@ -145,11 +145,10 @@ const describe = (attempts: readonly Attempt[]): string =>
     .join(',');
 
 /**
- * Standard Server-Timing header: the browser's network panel shows how long the AI step took
- * and which models were tried. Holds no user data.
+ * Standard Server-Timing header: the browser's network panel shows how long the AI step took.
+ * Only the duration: which models ran and which checks failed stay in the server log.
  */
-const serverTiming = (attempts: string, ms: number): string =>
-  `ai;dur=${String(ms)};desc="${attempts}"`;
+const serverTiming = (ms: number): string => `ai;dur=${String(ms)}`;
 
 async function answer(
   { task, job, started }: Job,
@@ -184,7 +183,7 @@ async function answer(
   });
   const last = attempts.at(-1);
   const trace = describe(attempts);
-  const timed = { ...headers, 'Server-Timing': serverTiming(trace, deps.now() - started) };
+  const timed = { ...headers, 'Server-Timing': serverTiming(deps.now() - started) };
   if (last?.outcome !== 'ok') {
     return [
       fail(STATUS.badGateway, 'AI answer failed checks; using built-in rules.', { headers: timed }),

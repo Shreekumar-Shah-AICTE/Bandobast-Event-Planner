@@ -61,7 +61,7 @@ Every version is kept in **History** (the last 30), with what each one changed a
 | `explain` | Rebalance options → a short comparison | The model may only write `{{placeholders}}`. Code fills in every number, and text with digits is rejected. | Template sentence |
 
 - **Models:** `gemini-3.5-flash-lite` first, then `gemini-3.8-flash` only if the first times out, errors or fails a check (a cheap-first cascade: on the live app the light model answered in about a second, and the larger one often ran past the 9-second per-model timeout). Both run through `@google/genai` with JSON-schema structured output, low thinking and temperature 1 (the Gemini 3 default, which Google advises keeping).
-- **Prompting:** user text is fenced and labelled as data, never as instructions. Each task has its own system instruction ([`server/prompts.ts`](server/prompts.ts)) and an output token cap ([`server/config.ts`](server/config.ts)).
+- **Prompting:** user text is fenced and labelled as data, never as instructions. All five tasks share one system instruction, and each task has its own prompt and response schema ([`server/prompts.ts`](server/prompts.ts)) and an output token cap ([`server/config.ts`](server/config.ts)).
 - **Cost and speed:** identical requests reuse a validated answer for 24 hours. The cache key is a one-way hash of the request, never the raw text.
 
 One AI request, step by step:
@@ -108,6 +108,7 @@ flowchart LR
   Fn --> Gemini[Gemini API]
   Shared[shared/ zod contracts + limits] -.-> Client
   Shared -.-> Fn
+  Engine -.->|pure rules, imported| Fn
 ```
 
 - **One pure function makes the plan.** `buildPlan(input, today)` turns your inputs (profile, fixed amounts, task states, your own tasks, vendor statuses, quotes, payments) into the budget, scenarios, schedule, vendor cards, quote analyses and payment totals. Nothing that can be derived is stored. A version is just its inputs, so the diff between two versions is exact.
@@ -121,7 +122,7 @@ flowchart LR
 | `src/state/` | Reducer for versions, restore and undo; saving with a backup and an in-memory fallback |
 | `src/ai/` | Typed client for the function, plus readers that try Gemini first and then the rules |
 | `src/ui/` | Screens: welcome, intake, dashboard, the impact report and seven tabs |
-| `server/`, `api/` | The AI function: request checks, rate limits, cache, model chain, prompts, output checks |
+| `server/`, `api/` | The AI function: request checks, rate limits, cache, model chain, prompts, output checks. It imports pure helpers from `src/domain` (templates, dates, grounding and idea checks, `Result`), never React or browser code. |
 | `shared/` | zod contracts, input limits and the shared time budget |
 | `e2e/` | Playwright journeys with axe-core checks |
 
@@ -160,7 +161,7 @@ flowchart LR
 | Browser | AI client and readers (AI first, then rules), the reducer and saving, and each tab with Testing Library, including focus and announcements | `src/**/*.test.ts(x)` |
 | Journeys | The Change Test, the Gemini path, quotes, a new plan, the keyboard, axe, and no CSP violations under the production headers, on desktop and mobile | `e2e/plan.spec.ts` |
 
-Coverage thresholds are enforced in [`vite.config.ts`](vite.config.ts): 95% overall and 100% of lines for the planning engine. Today: 363 unit and component tests, 99.7% of lines, 98% of branches, plus 14 browser runs. CI runs everything on every push ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
+Coverage thresholds are enforced in [`vite.config.ts`](vite.config.ts): 95% overall and 100% of lines for the planning engine. Today: 366 unit and component tests, 99.7% of lines, 98% of branches, plus 14 browser runs. CI runs everything on every push ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
 
 ## Claims you can check
 

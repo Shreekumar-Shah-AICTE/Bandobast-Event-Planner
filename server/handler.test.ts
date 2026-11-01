@@ -285,7 +285,7 @@ describe('a valid change request is answered, checked and cached', () => {
       status: 200,
       attempts: 'model-a:error,model-b:ok',
     });
-    expect(response.headers.get('server-timing')).toBe('ai;dur=0;desc="model-a:error,model-b:ok"');
+    expect(response.headers.get('server-timing')).toBe('ai;dur=0');
   });
 
   it('drops a change whose evidence is not in the request', async () => {
