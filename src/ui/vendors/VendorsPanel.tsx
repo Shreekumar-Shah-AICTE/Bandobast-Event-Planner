@@ -61,6 +61,7 @@ function VendorItem({
       <VendorPaymentsBlock category={card.category} vendor={card.vendor} controls={controls} />
       {search !== null && (
         <a
+          className="target-link"
           href={mapsSearchUrl(search, input.profile.city)}
           target="_blank"
           rel="noopener noreferrer"

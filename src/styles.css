@@ -79,7 +79,8 @@ a {
   outline-offset: 2px;
 }
 
-[tabindex='-1']:focus {
+/* Headings that receive focus from code show the outline only for keyboard users. */
+[tabindex='-1']:focus:not(:focus-visible) {
   outline: none;
 }
 
@@ -889,6 +890,13 @@ details summary {
   min-height: 44px;
   display: flex;
   align-items: center;
+}
+
+/* Links that stand on their own line get the same 44px target as buttons (WCAG 2.5.8). */
+.target-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
 }
 
 @media (max-width: 40rem) {
