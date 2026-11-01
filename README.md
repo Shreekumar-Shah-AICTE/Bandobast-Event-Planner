@@ -2,11 +2,11 @@
 
 # Bandobast: plans that hold when things change
 
-[![CI](https://github.com/Shreekumar-Shah-AICTE/Bandobast-Event-Planner/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Shreekumar-Shah-AICTE/Bandobast-Event-Planner/actions/workflows/ci.yml) [![Live demo](https://img.shields.io/badge/live_demo-bandobast--event--planner.vercel.app-7a1f3d)](https://bandobast-event-planner.vercel.app) [![Licence: all rights reserved](https://img.shields.io/badge/licence-all_rights_reserved-5c1530)](LICENSE)
+[![CI](https://github.com/Shreekumar-Shah-AICTE/Bandobast-Event-Planner/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Shreekumar-Shah-AICTE/Bandobast-Event-Planner/actions/workflows/ci.yml) [![Live demo](https://img.shields.io/badge/live_demo-bandobast--event--planner.vercel.app-7a1f3d)](https://bandobast-event-planner.vercel.app) [![Video: 2:39 walkthrough](https://img.shields.io/badge/video-2:39_walkthrough-1a73e8?logo=googledrive&logoColor=white)](https://drive.google.com/file/d/11YuMeCmJQGiJ9E-LwIEfVotbQ2BJ30i1/view?usp=sharing) [![Licence: all rights reserved](https://img.shields.io/badge/licence-all_rights_reserved-5c1530)](LICENSE)
 
 **Bandobast** (Hindi/Urdu for "arrangements") is a GenAI planning assistant for Indian weddings, birthdays, anniversaries and community events. It builds a budget, a timeline, vendor checklists and ideas for your guests. When something changes, like more guests, a smaller budget, an earlier date or a new quote, it shows exactly what moved and how to rebalance.
 
-**Live app:** https://bandobast-event-planner.vercel.app · **Stack:** React 19, TypeScript, Vite, Vercel Functions, Gemini API, Upstash Redis
+**Live app:** https://bandobast-event-planner.vercel.app · **Video walkthrough (2:39):** https://drive.google.com/file/d/11YuMeCmJQGiJ9E-LwIEfVotbQ2BJ30i1/view?usp=sharing · **Stack:** React 19, TypeScript, Vite, Vercel Functions, Gemini API, Upstash Redis
 
 ![Bandobast's plan screen for the sample wedding: a maroon header with the time left, the budget check, late tasks and vendors booked, then the "Something changed?" box with example changes, and the plan's seven tabs.](docs/images/plan.png)
 
