@@ -41,7 +41,7 @@ Every version is kept in **History** (the last 30), with what each one changed a
 
 | The problem statement asks for | What Bandobast does | Code |
 | --- | --- | --- |
-| **Budgets** | Splits your total across the lines this event needs, scaled by guest count and format. The split always adds up to your total to the rupee, and keeps a reserve for surprises (8% for weddings). Every amount is labelled **Estimate**, **Your number**, **Quote** or **Booked**. When the money falls short, it offers ranked rebalance options. | [`budget.ts`](src/domain/budget.ts), [`scenarios.ts`](src/domain/scenarios.ts) |
+| **Budgets** | Splits your total across the lines this event needs, scaled by guest count, format and city (metro, large city or smaller town, after India's X/Y/Z city classes). The split always adds up to your total to the rupee, and keeps a reserve for surprises (8% for weddings). Every amount is labelled **Estimate**, **Your number**, **Quote** or **Booked**. When the money falls short, it offers ranked rebalance options. | [`budget.ts`](src/domain/budget.ts), [`cityCost.ts`](src/domain/cityCost.ts), [`scenarios.ts`](src/domain/scenarios.ts) |
 | **Timelines** | Tasks with dependencies, scheduled with the critical-path method: slack, late and tight tasks, and catch-up options with the biggest saving first. Add your own tasks with a due date; they move with the event date like the built-in ones. Each task has a Google Calendar link, and you can download an `.ics` file. | [`timeline.ts`](src/domain/timeline.ts), [`customTasks.ts`](src/domain/customTasks.ts), [`calendar.ts`](src/domain/calendar.ts) |
 | **Vendor checklists** | A card per vendor: what to ask for at this guest count, questions to ask before booking, a status (to contact → contacted → quote received → booked), advances and instalments with due dates (paid, due, overdue, and how much of a booking has no payment yet) and a Google Maps search in your city. | [`vendors.ts`](src/domain/vendors.ts), [`payments.ts`](src/domain/payments.ts) |
 | **Personalised ideas** | A curated library ranked for your guests (elders, kids, diet, style), steerable (cheaper, more traditional, kid-friendly, elder-friendly, eco-friendly), plus fresh ideas from Gemini that pass code checks. | [`ideas.ts`](src/domain/ideas.ts), [`ideaLibrary.ts`](src/domain/ideaLibrary.ts) |
@@ -129,10 +129,10 @@ flowchart LR
 
 - **The key stays on the server.** `GEMINI_API_KEY` exists only in the function's environment, never with a `VITE_` prefix. The CSP lets the page connect only to its own origin.
 - **Checks before parsing:** POST only, JSON only, a same-site `Origin`, and a 16 KB body cap enforced while the body streams in ([`server/request.ts`](server/request.ts)). Then zod schemas for every input and every model answer, and the code checks listed above.
-- **Rate limits in a shared store, not in memory:** 12 requests per 60 s and 200 a day per client, and 3,000 a day for the app, in Upstash Redis. If the store can't be reached, requests are refused. Clients are keyed by a salted SHA-256 hash of the platform-set IP, never the raw address.
+- **Rate limits in a shared store, not in memory:** 12 requests per 60 s and 200 a day per client, and 3,000 a day for the app, in Upstash Redis. If the store can't be reached, requests are refused. Clients are keyed by a salted SHA-256 hash of the platform-set IP, never the raw address; Vercel overwrites any IP header the caller sends ([request headers](https://vercel.com/docs/headers/request-headers)). The client limits are checked first, so a client over its limit never uses up the app's daily ceiling.
 - **Privacy:** phone numbers and e-mails are removed in the browser from every text sent to the AI (event description, change requests and quotes), and again on the server before a prompt is built. Ideas requests carry no names. Logs hold only the task, status, models tried and timing. Plans stay in your browser.
 - **Output is data, never markup:** React escapes all text, there is no `dangerouslySetInnerHTML`, and links are built only from Google's URL formats. Headers in [`vercel.json`](vercel.json): strict CSP with no `unsafe-inline` or `unsafe-eval` (zod runs without its eval fast path), HSTS, `nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, COOP/CORP, a locked-down Permissions-Policy. API answers are `no-store`. `vite preview` serves the same headers, so the browser tests run under the production CSP.
-- **Supply chain:** exact versions with a lockfile, `npm audit` in CI, Actions pinned to commit SHAs, Dependabot. The threat model is in [SECURITY.md](SECURITY.md).
+- **Supply chain:** exact versions in `package.json` (no `^` or `~`), a committed `package-lock.json` installed with `npm ci`, `npm audit` in CI, Actions pinned to commit SHAs, Dependabot. The threat model is in [SECURITY.md](SECURITY.md).
 
 ## Efficiency
 
@@ -149,7 +149,7 @@ flowchart LR
 - **Keyboard:** WAI-ARIA tabs with arrow keys, Home and End. Every action is a real button or link, and focus is always visible.
 - **Announcements:** live regions report AI progress and results, saves and quote actions. Form errors are listed in a summary that links to each field, with `aria-invalid` and `aria-describedby`.
 - **Readable:** AA contrast, labels on every control, words for screen readers next to symbols (₹₹ cost levels), and reduced motion respected.
-- **Tested:** axe-core finds no WCAG 2.2 A/AA violations on any screen in Playwright, on both desktop and mobile. `eslint-plugin-jsx-a11y` runs on every file, and component tests find elements by role and name.
+- **Tested:** axe-core finds no WCAG 2.2 A/AA violations on any screen in Playwright (welcome, the form with its error summary, the change preview, the What changed report and every plan tab), on both desktop and mobile. `eslint-plugin-jsx-a11y` runs on every file, and component tests find elements by role and name.
 
 ## Testing
 
@@ -160,7 +160,7 @@ flowchart LR
 | Browser | AI client and readers (AI first, then rules), the reducer and saving, and each tab with Testing Library, including focus and announcements | `src/**/*.test.ts(x)` |
 | Journeys | The Change Test, the Gemini path, quotes, a new plan, the keyboard, axe, and no CSP violations under the production headers, on desktop and mobile | `e2e/plan.spec.ts` |
 
-Coverage thresholds are enforced in [`vite.config.ts`](vite.config.ts): 95% overall and 100% of lines for the planning engine. Today: 363 unit and component tests, 99.7% of lines, 98% of branches, plus 14 browser runs. CI runs everything on every push ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
+Coverage thresholds are enforced in [`vite.config.ts`](vite.config.ts): 95% overall and 100% of lines for the planning engine. Today: 377 unit and component tests, 99.7% of lines, 98% of branches, plus 14 browser runs. CI runs everything on every push ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
 
 ## Claims you can check
 
@@ -199,13 +199,11 @@ Settings are server-only (Vercel → Settings → Environment Variables; templat
 | `GEMINI_MODELS` | No | Comma-separated model chain, tried in order (default as above) |
 | `RATE_LIMIT_SALT` | No | Salt for the one-way hash of client IPs used as rate-limit keys |
 
-## Known limitations
+## Design choices
 
-- Costs are planning estimates from typical mid-range assumptions, not vendor prices. Your own numbers and quotes replace them.
-- Plans stay in this browser: there are no accounts and no automatic sync. A plan file moves a plan by hand.
-- The built-in rules understand common phrasing only. Anything they cannot read is listed, never guessed.
-- Each budget line books one vendor. You can compare any number of quotes for it, and name each payment when the work is split between two vendors.
-- Change requests move and tick the built-in tasks by name; your own tasks move with the event date and are ticked by hand.
+- **Plans stay in your browser.** There are no accounts, and the plan is never stored on a server. A plan file moves a plan to another device, and it passes the same checks as a saved plan.
+- **Estimates are starting points.** Typical mid-range costs, scaled to the city's X, Y or Z class, fill the budget until your own numbers and quotes replace them. Every rupee carries its label: Estimate, Your number, Quote or Booked.
+- **The backup rules never guess.** When Gemini is unavailable, built-in rules read common phrasing. Anything they cannot read is listed as not understood.
 
 ## Licence
 
